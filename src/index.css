@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+body {
+  @apply min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+html.dark {
+  color-scheme: dark;
+}
