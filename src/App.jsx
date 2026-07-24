@@ -12,9 +12,9 @@ import {
 } from './utils/calculations';
 
 const DEFAULT_VALUES = {
-  age: '',
-  weight: '',
-  height: '',
+  age: undefined,
+  weight: undefined,
+  height: undefined,
   sex: 'male',
   activity: '',
   goal: '',

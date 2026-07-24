@@ -1,54 +1,53 @@
-import { Input, Label, Select, ListBox, RadioGroup, Radio } from '@heroui/react';
+import { NumberField, Label, Select, ListBox, RadioGroup, Radio } from '@heroui/react';
 import { ACTIVITY_OPTIONS, GOAL_OPTIONS } from '../utils/calculations';
 
 export function CalorieForm({ values, onChange }) {
-  const handleInput = (field) => (e) => {
-    onChange({ ...values, [field]: e.target.value === '' ? '' : Number(e.target.value) });
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="age">Edad</Label>
-          <Input
-            id="age"
-            type="number"
-            min={10}
-            max={120}
-            placeholder="30"
-            value={values.age === '' ? '' : String(values.age)}
-            onChange={handleInput('age')}
-            variant="secondary"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="weight">Peso (kg)</Label>
-          <Input
-            id="weight"
-            type="number"
-            min={20}
-            max={300}
-            step={0.1}
-            placeholder="70"
-            value={values.weight === '' ? '' : String(values.weight)}
-            onChange={handleInput('weight')}
-            variant="secondary"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="height">Altura (cm)</Label>
-          <Input
-            id="height"
-            type="number"
-            min={100}
-            max={250}
-            placeholder="175"
-            value={values.height === '' ? '' : String(values.height)}
-            onChange={handleInput('height')}
-            variant="secondary"
-          />
-        </div>
+        <NumberField
+          value={values.age}
+          onChange={(v) => onChange({ ...values, age: v })}
+          minValue={10}
+          maxValue={120}
+          variant="secondary"
+        >
+          <Label>Edad</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input placeholder="30" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField
+          value={values.weight}
+          onChange={(v) => onChange({ ...values, weight: v })}
+          minValue={20}
+          maxValue={300}
+          step={1}
+          variant="secondary"
+        >
+          <Label>Peso (kg)</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input placeholder="70" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField
+          value={values.height}
+          onChange={(v) => onChange({ ...values, height: v })}
+          minValue={100}
+          maxValue={250}
+          variant="secondary"
+        >
+          <Label>Altura (cm)</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input placeholder="175" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
       </div>
 
       <RadioGroup
