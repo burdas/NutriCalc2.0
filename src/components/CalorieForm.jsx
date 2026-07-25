@@ -1,4 +1,5 @@
 import { NumberField, Label, Select, ListBox, RadioGroup, Radio } from '@heroui/react';
+import { Mars, Venus } from 'lucide-react';
 import { ACTIVITY_OPTIONS, GOAL_OPTIONS } from '../utils/calculations';
 
 export function CalorieForm({ values, onChange }) {
@@ -55,21 +56,17 @@ export function CalorieForm({ values, onChange }) {
         onChange={(v) => onChange({ ...values, sex: v })}
         variant="secondary"
       >
-        <Label>Sexo</Label>
-        <div className="grid gap-x-4 md:grid-cols-2">
-          <Radio value="male">
-            <Radio.Content className="group relative flex w-full flex-col rounded-xl border border-transparent bg-surface-secondary px-5 py-4 transition-all data-[selected=true]:border-accent data-[selected=true]:bg-accent/10 data-[focus-visible=true]:border-accent data-[focus-visible=true]:bg-accent/10">
-              <Radio.Control className="absolute top-3 right-4 size-5">
-                <Radio.Indicator />
-              </Radio.Control>
+        <Label className="mb-2">Sexo</Label>
+        <div className="radio-pill-group grid w-full grid-cols-2 gap-1 rounded-full bg-surface-secondary p-1.5">
+          <Radio value="male" className="flex h-full w-full items-center">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-2.5 text-sm font-medium text-foreground/60 transition-all data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-soft-foreground data-[selected=true]:shadow-sm">
+              <Mars className="size-4" />
               Hombre
             </Radio.Content>
           </Radio>
-          <Radio value="female">
-            <Radio.Content className="group relative flex w-full flex-col rounded-xl border border-transparent bg-surface-secondary px-5 py-4 transition-all data-[selected=true]:border-accent data-[selected=true]:bg-accent/10 data-[focus-visible=true]:border-accent data-[focus-visible=true]:bg-accent/10">
-              <Radio.Control className="absolute top-3 right-4 size-5">
-                <Radio.Indicator />
-              </Radio.Control>
+          <Radio value="female" className="flex h-full w-full items-center">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-2.5 text-sm font-medium text-foreground/60 transition-all data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-soft-foreground data-[selected=true]:shadow-sm">
+              <Venus className="size-4" />
               Mujer
             </Radio.Content>
           </Radio>

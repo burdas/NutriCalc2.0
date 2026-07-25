@@ -9,3 +9,7 @@ body {
 html.dark {
   color-scheme: dark;
 }
+
+.radio-pill-group [data-slot="radio"] {
+  margin-top: 0;
+}
