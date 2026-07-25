@@ -31,7 +31,7 @@ export function CalorieResults({ bmr, tdee, targetCalories, macros }) {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4 lg:justify-between lg:gap-0">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card variant="secondary">
           <Card.Header>

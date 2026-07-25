@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@heroui/react';
+import { Calculator } from 'lucide-react';
 import { Header } from './components/Header';
 import { CalorieForm } from './components/CalorieForm';
 import { CalorieResults } from './components/CalorieResults';
@@ -51,23 +52,39 @@ function App() {
   }, [values]);
 
   return (
-    <div className="mx-auto max-w-2xl px-4">
+    <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl">
       <Header isDark={isDark} onToggleDark={toggleDark} />
 
-      <main className="flex flex-col gap-8 pb-12">
-        <Card>
-          <Card.Header>
-            <Card.Title>Tus datos</Card.Title>
-            <Card.Description>
-              Completa los campos para calcular tus calorías diarias
-            </Card.Description>
-          </Card.Header>
-          <Card.Content>
-            <CalorieForm values={values} onChange={setValues} />
-          </Card.Content>
-        </Card>
+      <main className="flex flex-col gap-8 pb-12 lg:grid lg:grid-cols-2 lg:gap-8">
+        <div className="flex flex-col lg:h-full">
+          <Card>
+            <Card.Header>
+              <Card.Title>Tus datos</Card.Title>
+              <Card.Description>
+                Completa los campos para calcular tus calorías diarias
+              </Card.Description>
+            </Card.Header>
+            <Card.Content>
+              <CalorieForm values={values} onChange={setValues} />
+            </Card.Content>
+          </Card>
+        </div>
 
-        {results && <CalorieResults {...results} />}
+        <div className="flex flex-col lg:h-full">
+          {results ? (
+            <CalorieResults {...results} />
+          ) : (
+            <div className="flex flex-1 items-center justify-center rounded-2xl bg-content1 p-8 shadow-sm">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <Calculator className="size-12 text-[var(--foreground)]/30" />
+                <p className="text-lg font-semibold">Completa el formulario</p>
+                <p className="text-muted text-sm max-w-60">
+                  Ingresa tus datos para calcular tus calorías diarias
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
