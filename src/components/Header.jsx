@@ -1,4 +1,5 @@
-import { Switch } from '@heroui/react';
+import { RadioGroup, Radio } from '@heroui/react';
+import { Sun, Moon } from 'lucide-react';
 
 export function Header({ isDark, onToggleDark }) {
   return (
@@ -7,25 +8,26 @@ export function Header({ isDark, onToggleDark }) {
         <h1 className="text-2xl font-bold">Calculadora de Calorías</h1>
         <p className="text-muted text-sm">Fórmula Mifflin-St Jeor</p>
       </div>
-      <Switch isSelected={isDark} onChange={onToggleDark} size="lg" aria-label="modo oscuro">
-        <Switch.Content>
-          <Switch.Control>
-            <Switch.Thumb>
-              <Switch.Icon>
-                {isDark ? (
-                  <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                ) : (
-                  <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                )}
-              </Switch.Icon>
-            </Switch.Thumb>
-          </Switch.Control>
-        </Switch.Content>
-      </Switch>
+      <RadioGroup
+        value={isDark ? 'dark' : 'light'}
+        onChange={(v) => {
+          if ((v === 'dark') !== isDark) onToggleDark();
+        }}
+        aria-label="modo oscuro"
+      >
+        <div className="radio-pill-group grid grid-cols-2 gap-1 rounded-full bg-surface p-1">
+          <Radio value="light" className="flex h-full w-full items-center">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full p-2 text-sm font-medium text-foreground/60 transition-all aspect-square data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground data-[selected=true]:shadow-sm">
+              <Sun className="size-4" />
+            </Radio.Content>
+          </Radio>
+          <Radio value="dark" className="flex h-full w-full items-center">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full p-2 text-sm font-medium text-foreground/60 transition-all aspect-square data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground data-[selected=true]:shadow-sm">
+              <Moon className="size-4" />
+            </Radio.Content>
+          </Radio>
+        </div>
+      </RadioGroup>
     </header>
   );
 }
