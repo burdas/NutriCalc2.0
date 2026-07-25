@@ -53,25 +53,27 @@ export function CalorieForm({ values, onChange }) {
       <RadioGroup
         value={values.sex}
         onChange={(v) => onChange({ ...values, sex: v })}
-        orientation="horizontal"
+        variant="secondary"
       >
         <Label>Sexo</Label>
-        <Radio value="male">
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            Hombre
-          </Radio.Content>
-        </Radio>
-        <Radio value="female">
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            Mujer
-          </Radio.Content>
-        </Radio>
+        <div className="grid gap-x-4 md:grid-cols-2">
+          <Radio value="male">
+            <Radio.Content className="group relative flex w-full flex-col rounded-xl border border-transparent bg-surface-secondary px-5 py-4 transition-all data-[selected=true]:border-accent data-[selected=true]:bg-accent/10 data-[focus-visible=true]:border-accent data-[focus-visible=true]:bg-accent/10">
+              <Radio.Control className="absolute top-3 right-4 size-5">
+                <Radio.Indicator />
+              </Radio.Control>
+              Hombre
+            </Radio.Content>
+          </Radio>
+          <Radio value="female">
+            <Radio.Content className="group relative flex w-full flex-col rounded-xl border border-transparent bg-surface-secondary px-5 py-4 transition-all data-[selected=true]:border-accent data-[selected=true]:bg-accent/10 data-[focus-visible=true]:border-accent data-[focus-visible=true]:bg-accent/10">
+              <Radio.Control className="absolute top-3 right-4 size-5">
+                <Radio.Indicator />
+              </Radio.Control>
+              Mujer
+            </Radio.Content>
+          </Radio>
+        </div>
       </RadioGroup>
 
       <div className="flex flex-col gap-1">
