@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@heroui/react';
 import { Header } from './components/Header';
 import { CalorieForm } from './components/CalorieForm';
@@ -11,6 +11,8 @@ import {
   calculateMacros,
 } from './utils/calculations';
 
+const STORAGE_KEY = 'calorie-form-values';
+
 const DEFAULT_VALUES = {
   age: undefined,
   weight: undefined,
@@ -20,9 +22,21 @@ const DEFAULT_VALUES = {
   goal: '',
 };
 
+function loadInitialValues() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return { ...DEFAULT_VALUES, ...JSON.parse(stored) };
+  } catch {}
+  return DEFAULT_VALUES;
+}
+
 function App() {
   const { isDark, toggle: toggleDark } = useDarkMode();
-  const [values, setValues] = useState(DEFAULT_VALUES);
+  const [values, setValues] = useState(loadInitialValues);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+  }, [values]);
 
   const results = useMemo(() => {
     const { age, weight, height, sex, activity, goal } = values;
