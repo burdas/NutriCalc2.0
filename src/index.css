@@ -1,13 +1,29 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-body {
-  @apply min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors;
-  font-family: system-ui, -apple-system, sans-serif;
+html {
+  transition: color-scheme 0.3s ease;
 }
 
 html.dark {
   color-scheme: dark;
+}
+
+*, *::before, *::after {
+  transition-property: background-color, color, border-color, box-shadow;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none;
+  }
+}
+
+body {
+  @apply min-h-screen bg-[var(--background)] text-[var(--foreground)];
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .radio-pill-group [data-slot="radio"] {
