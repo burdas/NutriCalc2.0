@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Card, Modal } from '@heroui/react';
+import { Card, Modal, NumberField, Label } from '@heroui/react';
 import { Calculator } from 'lucide-react';
 import { Header } from './components/Header';
 import { CalorieForm } from './components/CalorieForm';
 import { CalorieResults } from './components/CalorieResults';
+import { WeightProjection } from './components/WeightProjection';
 import { SettingsPanel } from './components/SettingsPanel';
 import { InfoContent } from './components/InfoContent';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -41,6 +42,18 @@ function App() {
   const [values, setValues] = useState(loadInitialValues);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [targetWeight, setTargetWeight] = useState(() => {
+    try {
+      const stored = localStorage.getItem('calorie-target-weight');
+      return stored ? JSON.parse(stored) : undefined;
+    } catch {
+      return undefined;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('calorie-target-weight', JSON.stringify(targetWeight));
+  }, [targetWeight]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
@@ -106,6 +119,46 @@ function App() {
           )}
         </div>
       </main>
+
+      {results && (
+        <section className="pb-12 animate-[fadeInUp_0.5s_ease-out_0.6s_both]">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold">Proyección de peso</h2>
+              <p className="text-muted text-sm">
+                Establece tu peso objetivo y visualiza el tiempo estimado para alcanzarlo
+              </p>
+            </div>
+            <div className="w-full sm:w-auto sm:max-w-xs">
+              <NumberField
+                value={targetWeight}
+                onChange={(v) => setTargetWeight(v ?? undefined)}
+                minValue={20}
+                maxValue={300}
+                step={1}
+                variant="secondary"
+              >
+                <Label>Peso objetivo (kg)</Label>
+                <NumberField.Group>
+                  <NumberField.DecrementButton />
+                  <NumberField.Input placeholder={values.weight?.toString()} />
+                  <NumberField.IncrementButton />
+                </NumberField.Group>
+              </NumberField>
+            </div>
+          </div>
+          <Card>
+            <Card.Content>
+              <WeightProjection
+                currentWeight={values.weight}
+                goal={values.goal}
+                goalAdjustment={config.goalAdjustments[values.goal]}
+                targetWeight={targetWeight}
+              />
+            </Card.Content>
+          </Card>
+        </section>
+      )}
 
       <Modal.Backdrop isOpen={infoOpen} onOpenChange={setInfoOpen}>
         <Modal.Container size="lg">
