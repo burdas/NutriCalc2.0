@@ -2,6 +2,7 @@ import { Card } from '@heroui/react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
 } from 'recharts';
+import { useCounter } from '../hooks/useCounter';
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -14,6 +15,10 @@ function CustomTooltip({ active, payload }) {
 }
 
 export function CalorieResults({ bmr, tdee, targetCalories, macros }) {
+  const animatedBmr = useCounter(bmr, { duration: 800, delay: 0 });
+  const animatedTdee = useCounter(tdee, { duration: 800, delay: 150 });
+  const animatedTarget = useCounter(targetCalories, { duration: 800, delay: 300 });
+
   if (!targetCalories) return null;
 
   const { proteinG, fatG, carbG } = macros;
@@ -31,32 +36,32 @@ export function CalorieResults({ bmr, tdee, targetCalories, macros }) {
   ];
 
   return (
-    <div className="flex flex-1 flex-col gap-4 lg:justify-between lg:gap-0">
+    <div className="flex flex-1 flex-col gap-4 animate-[fadeInUp_0.5s_ease-out] lg:justify-between lg:gap-0">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card variant="secondary">
+        <Card variant="secondary" className="animate-[fadeInUp_0.4s_ease-out]">
           <Card.Header>
             <Card.Description>TMB</Card.Description>
-            <Card.Title className="text-3xl font-bold">{bmr}</Card.Title>
+            <Card.Title className="text-3xl font-bold tabular-nums">{animatedBmr}</Card.Title>
           </Card.Header>
           <Card.Content>
             <p className="text-muted text-sm">Tasa Metabólica Basal</p>
           </Card.Content>
         </Card>
 
-        <Card variant="secondary">
+        <Card variant="secondary" className="animate-[fadeInUp_0.4s_ease-out_0.15s_both]">
           <Card.Header>
             <Card.Description>TDEE</Card.Description>
-            <Card.Title className="text-3xl font-bold">{tdee}</Card.Title>
+            <Card.Title className="text-3xl font-bold tabular-nums">{animatedTdee}</Card.Title>
           </Card.Header>
           <Card.Content>
             <p className="text-muted text-sm">Gasto Energético Total</p>
           </Card.Content>
         </Card>
 
-        <Card variant="tertiary">
+        <Card variant="tertiary" className="animate-[fadeInUp_0.4s_ease-out_0.3s_both]">
           <Card.Header>
             <Card.Description>Calorías objetivo</Card.Description>
-            <Card.Title className="text-3xl font-bold">{targetCalories}</Card.Title>
+            <Card.Title className="text-3xl font-bold tabular-nums">{animatedTarget}</Card.Title>
           </Card.Header>
           <Card.Content>
             <p className="text-muted text-sm">Ajustadas por objetivo</p>
@@ -64,7 +69,7 @@ export function CalorieResults({ bmr, tdee, targetCalories, macros }) {
         </Card>
       </div>
 
-      <Card>
+      <Card className="animate-[fadeInUp_0.4s_ease-out_0.45s_both]">
         <Card.Header>
           <Card.Title>Macronutrientes sugeridos</Card.Title>
           <Card.Description>Distribución aproximada para tu objetivo</Card.Description>

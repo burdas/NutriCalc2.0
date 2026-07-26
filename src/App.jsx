@@ -76,7 +76,7 @@ function App() {
       />
 
       <main className="flex flex-col gap-8 pb-12 lg:grid lg:grid-cols-2 lg:gap-8">
-        <div className="flex flex-col lg:h-full">
+        <div className="flex flex-col lg:h-full animate-[fadeInUp_0.5s_ease-out_0.1s_both]">
           <Card>
             <Card.Header>
               <Card.Title>Tus datos</Card.Title>
@@ -94,9 +94,9 @@ function App() {
           {results ? (
             <CalorieResults {...results} />
           ) : (
-            <div className="flex flex-1 items-center justify-center rounded-2xl bg-content1 p-8 shadow-sm">
+            <div className="flex flex-1 items-center justify-center rounded-2xl bg-content1 p-8 shadow-sm animate-[fadeIn_0.3s_ease-out]">
               <div className="flex flex-col items-center gap-3 text-center">
-                <Calculator className="size-12 text-[var(--foreground)]/30" />
+                <Calculator className="size-12 text-[var(--foreground)]/30 animate-[gentlePulse_2s_ease-in-out_infinite]" />
                 <p className="text-lg font-semibold">Completa el formulario</p>
                 <p className="text-muted text-sm max-w-60">
                   Ingresa tus datos para calcular tus calorías diarias

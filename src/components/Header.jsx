@@ -3,7 +3,7 @@ import { Info, Settings, Sun, Moon } from 'lucide-react';
 
 export function Header({ isDark, onToggleDark, onOpenSettings, onOpenInfo }) {
   return (
-    <header className="flex items-center justify-between py-6">
+    <header className="flex items-center justify-between py-6 animate-[fadeIn_0.6s_ease-out]">
       <div>
         <h1 className="text-2xl font-bold">Calculadora de Calorías</h1>
         <p className="text-muted text-sm">Fórmula Mifflin-St Jeor</p>
