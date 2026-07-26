@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { CalorieForm } from './components/CalorieForm';
 import { CalorieResults } from './components/CalorieResults';
 import { SettingsPanel } from './components/SettingsPanel';
+import { InfoContent } from './components/InfoContent';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useConfig } from './hooks/useConfig';
 import {
@@ -39,6 +40,7 @@ function App() {
   const { config, setConfig, resetConfig } = useConfig();
   const [values, setValues] = useState(loadInitialValues);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
@@ -70,6 +72,7 @@ function App() {
         isDark={isDark}
         onToggleDark={toggleDark}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenInfo={() => setInfoOpen(true)}
       />
 
       <main className="flex flex-col gap-8 pb-12 lg:grid lg:grid-cols-2 lg:gap-8">
@@ -103,6 +106,20 @@ function App() {
           )}
         </div>
       </main>
+
+      <Modal.Backdrop isOpen={infoOpen} onOpenChange={setInfoOpen}>
+        <Modal.Container size="lg">
+          <Modal.Dialog>
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>Cómo funciona la calculadora</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body className="flex flex-col gap-4">
+              <InfoContent />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
 
       <Modal.Backdrop isOpen={settingsOpen} onOpenChange={setSettingsOpen}>
         <Modal.Container size="lg">

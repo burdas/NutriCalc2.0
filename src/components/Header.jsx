@@ -1,7 +1,7 @@
 import { Button, RadioGroup, Radio } from '@heroui/react';
-import { Settings, Sun, Moon } from 'lucide-react';
+import { Info, Settings, Sun, Moon } from 'lucide-react';
 
-export function Header({ isDark, onToggleDark, onOpenSettings }) {
+export function Header({ isDark, onToggleDark, onOpenSettings, onOpenInfo }) {
   return (
     <header className="flex items-center justify-between py-6">
       <div>
@@ -9,6 +9,9 @@ export function Header({ isDark, onToggleDark, onOpenSettings }) {
         <p className="text-muted text-sm">Fórmula Mifflin-St Jeor</p>
       </div>
       <div className="flex items-center gap-2">
+        <Button isIconOnly variant="tertiary" onPress={onOpenInfo}>
+          <Info />
+        </Button>
         <Button isIconOnly variant="tertiary" onPress={onOpenSettings}>
           <Settings />
         </Button>
