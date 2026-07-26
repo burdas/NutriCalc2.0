@@ -1,14 +1,18 @@
-import { RadioGroup, Radio } from '@heroui/react';
-import { Sun, Moon } from 'lucide-react';
+import { Button, RadioGroup, Radio } from '@heroui/react';
+import { Settings, Sun, Moon } from 'lucide-react';
 
-export function Header({ isDark, onToggleDark }) {
+export function Header({ isDark, onToggleDark, onOpenSettings }) {
   return (
     <header className="flex items-center justify-between py-6">
       <div>
         <h1 className="text-2xl font-bold">Calculadora de Calorías</h1>
         <p className="text-muted text-sm">Fórmula Mifflin-St Jeor</p>
       </div>
-      <RadioGroup
+      <div className="flex items-center gap-2">
+        <Button isIconOnly variant="tertiary" onPress={onOpenSettings}>
+          <Settings />
+        </Button>
+        <RadioGroup
         value={isDark ? 'dark' : 'light'}
         onChange={(v) => {
           if ((v === 'dark') !== isDark) onToggleDark();
@@ -28,6 +32,7 @@ export function Header({ isDark, onToggleDark }) {
           </Radio>
         </div>
       </RadioGroup>
+      </div>
     </header>
   );
 }

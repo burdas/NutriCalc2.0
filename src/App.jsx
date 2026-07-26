@@ -1,16 +1,19 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Card } from '@heroui/react';
+import { Card, Modal } from '@heroui/react';
 import { Calculator } from 'lucide-react';
 import { Header } from './components/Header';
 import { CalorieForm } from './components/CalorieForm';
 import { CalorieResults } from './components/CalorieResults';
+import { SettingsPanel } from './components/SettingsPanel';
 import { useDarkMode } from './hooks/useDarkMode';
+import { useConfig } from './hooks/useConfig';
 import {
   calculateBMR,
   calculateTDEE,
   calculateTargetCalories,
   calculateMacros,
 } from './utils/calculations';
+import { MACRO_PRESETS } from './utils/defaults';
 
 const STORAGE_KEY = 'calorie-form-values';
 
@@ -33,11 +36,21 @@ function loadInitialValues() {
 
 function App() {
   const { isDark, toggle: toggleDark } = useDarkMode();
+  const { config, setConfig, resetConfig } = useConfig();
   const [values, setValues] = useState(loadInitialValues);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
   }, [values]);
+
+  const macroConfig = useMemo(() => {
+    const preset = config.macroPreset;
+    if (preset === 'custom') {
+      return config.customMacros ?? { proteinPerKg: 1.8, fatPercent: 0.25 };
+    }
+    return MACRO_PRESETS[preset];
+  }, [config.macroPreset, config.customMacros]);
 
   const results = useMemo(() => {
     const { age, weight, height, sex, activity, goal } = values;
@@ -45,15 +58,19 @@ function App() {
 
     const bmr = Math.round(calculateBMR(weight, height, age, sex));
     const tdee = calculateTDEE(bmr, activity);
-    const targetCalories = calculateTargetCalories(tdee, goal);
-    const macros = calculateMacros(targetCalories, weight);
+    const targetCalories = calculateTargetCalories(tdee, goal, config.goalAdjustments);
+    const macros = calculateMacros(targetCalories, weight, macroConfig);
 
     return { bmr, tdee, targetCalories, macros };
-  }, [values]);
+  }, [values, config.goalAdjustments, macroConfig]);
 
   return (
     <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl">
-      <Header isDark={isDark} onToggleDark={toggleDark} />
+      <Header
+        isDark={isDark}
+        onToggleDark={toggleDark}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
 
       <main className="flex flex-col gap-8 pb-12 lg:grid lg:grid-cols-2 lg:gap-8">
         <div className="flex flex-col lg:h-full">
@@ -86,6 +103,24 @@ function App() {
           )}
         </div>
       </main>
+
+      <Modal.Backdrop isOpen={settingsOpen} onOpenChange={setSettingsOpen}>
+        <Modal.Container size="lg">
+          <Modal.Dialog>
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <Modal.Heading>Configuración</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body className="flex flex-col gap-4">
+              <SettingsPanel
+                config={config}
+                setConfig={setConfig}
+                resetConfig={resetConfig}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </div>
   );
 }

@@ -6,7 +6,7 @@ const ACTIVITY_MULTIPLIERS = {
   extra: 1.9,
 };
 
-const GOAL_ADJUSTMENTS = {
+const DEFAULT_GOAL_ADJUSTMENTS = {
   lose: -350,
   maintain: 0,
   gain: 350,
@@ -21,15 +21,16 @@ export function calculateTDEE(bmr, activity) {
   return Math.round(bmr * ACTIVITY_MULTIPLIERS[activity]);
 }
 
-export function calculateTargetCalories(tdee, goal) {
-  return Math.round(tdee + GOAL_ADJUSTMENTS[goal]);
+export function calculateTargetCalories(tdee, goal, goalAdjustments = DEFAULT_GOAL_ADJUSTMENTS) {
+  return Math.round(tdee + (goalAdjustments[goal] ?? 0));
 }
 
-export function calculateMacros(targetCalories, weight) {
-  const proteinG = Math.round(1.8 * weight);
+export function calculateMacros(targetCalories, weight, macroConfig = {}) {
+  const { proteinPerKg = 1.8, fatPercent = 0.25 } = macroConfig;
+  const proteinG = Math.round(proteinPerKg * weight);
   const proteinCal = proteinG * 4;
 
-  const fatCal = Math.round(targetCalories * 0.25);
+  const fatCal = Math.round(targetCalories * fatPercent);
   const fatG = Math.round(fatCal / 9);
 
   const carbCal = targetCalories - proteinCal - fatCal;
@@ -47,7 +48,7 @@ export const ACTIVITY_OPTIONS = [
 ];
 
 export const GOAL_OPTIONS = [
-  { id: 'lose', label: 'Perder peso', desc: 'Déficit calórico (350 kcal menos)' },
+  { id: 'lose', label: 'Perder peso', desc: 'Déficit calórico' },
   { id: 'maintain', label: 'Mantener peso', desc: 'Mantenimiento calórico' },
-  { id: 'gain', label: 'Ganar músculo', desc: 'Superávit calórico (350 kcal más)' },
+  { id: 'gain', label: 'Ganar músculo', desc: 'Superávit calórico' },
 ];
