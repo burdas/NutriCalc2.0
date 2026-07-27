@@ -1,6 +1,6 @@
 import { Card } from '@heroui/react';
 import {
-  Calculator, Activity, Target, PieChart, AlertTriangle,
+  Calculator, Activity, Target, PieChart, TrendingDown, AlertTriangle,
 } from 'lucide-react';
 import { ACTIVITY_OPTIONS } from '../utils/calculations';
 
@@ -8,7 +8,7 @@ const FACTORS = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, e
 
 export function InfoContent() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4">
       <Card>
         <Card.Header>
           <Calculator />
@@ -134,7 +134,54 @@ export function InfoContent() {
         </Card.Content>
       </Card>
 
-      <div className="col-span-full flex items-start gap-2 rounded-lg bg-surface p-3 text-sm">
+      <Card>
+        <Card.Header>
+          <TrendingDown />
+          <div>
+            <Card.Title>Proyección de peso</Card.Title>
+            <Card.Description>
+              Tiempo estimado para alcanzar tu peso objetivo
+            </Card.Description>
+          </div>
+        </Card.Header>
+        <Card.Content>
+          <div className="flex flex-col gap-2 text-sm">
+            <div className="rounded-lg bg-surface p-3">
+              <span className="font-medium">¿Cómo se calcula?</span>
+              <p className="font-mono text-xs text-[var(--foreground)]/60 mt-1">
+                1 kg de grasa corporal ≈ 7.700 kcal
+              </p>
+              <p className="font-mono text-xs text-[var(--foreground)]/60">
+                Días = |peso objetivo − peso actual| × 7.700 ÷ |ajuste diario|
+              </p>
+            </div>
+            <div className="rounded-lg bg-surface p-3">
+              <span className="font-medium">Ejemplo práctico</span>
+              <p className="font-mono text-xs text-[var(--foreground)]/60 mt-1">
+                Perder 5 kg con déficit de 350 kcal/día →
+              </p>
+              <p className="font-mono text-xs text-[var(--foreground)]/60">
+                5 × 7.700 ÷ 350 ≈ 110 días (~3,7 meses)
+              </p>
+            </div>
+            <div className="rounded-lg bg-surface p-3">
+              <span className="font-medium">Visualización</span>
+              <p className="font-mono text-xs text-[var(--foreground)]/60 mt-1">
+                Se genera un gráfico lineal con la proyección día a día
+                desde tu peso actual hasta el objetivo, asumiendo un
+                déficit o superávit constante.
+              </p>
+            </div>
+            <p className="text-muted mt-1 text-xs">
+              La proyección es una estimación teórica lineal. Los
+              resultados reales pueden variar según metabolismo,
+              adherencia, composición corporal y otros factores.
+            </p>
+          </div>
+        </Card.Content>
+      </Card>
+
+      <div className="flex items-start gap-2 rounded-lg bg-surface p-3 text-sm">
         <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
         <p className="text-muted text-xs">
           Estos valores son estimaciones basadas en fórmulas poblacionales.
