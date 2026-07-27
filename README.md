@@ -1,16 +1,32 @@
-# React + Vite
+# NutriCalc 2.0 — Calculadora de Calorías
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Calcula tus necesidades calóricas diarias y distribución de macronutrientes usando la fórmula **Mifflin-St Jeor**. Incluye proyección de peso a lo largo del tiempo con gráficos interactivos.
 
-Currently, two official plugins are available:
+## Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Cálculo de calorías**: BMR, TDEE y calorías objetivo ajustadas por meta (perder peso, mantener, ganar músculo)
+- **Macronutrientes**: distribución visual con gráfico de donut y desglose en gramos y porcentajes
+- **Proyección de peso**: gráfico de línea que estima el peso a futuro según el déficit/superávit diario
+- **Panel de configuración**: ajuste manual de déficit/superávit y perfiles de macros (Balanceado, Alta Proteína, Baja en Carbos, Keto, Personalizado)
+- **Modo oscuro**: alternancia entre tema claro/oscuro con persistencia en `localStorage`
+- **Persistencia de datos**: formulario, peso objetivo y configuración se guardan automáticamente
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Tecnología | Versión |
+|---|---|
+| React | 19 |
+| Vite | 8 |
+| HeroUI | 3 |
+| Tailwind CSS | 4 |
+| Recharts | 3 |
+| Lucide React | 1 |
 
-## Expanding the Oxlint configuration
+## Scripts
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+npm run dev      # Inicia servidor de desarrollo
+npm run build    # Compila para producción
+npm run preview  # Previsualiza build de producción
+npm run lint     # Ejecuta Oxlint
+```
