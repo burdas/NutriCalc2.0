@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { DEFAULT_CONFIG, CONFIG_STORAGE_KEY } from '../utils/defaults';
 
 function loadConfig() {
@@ -12,10 +12,13 @@ function loadConfig() {
 export function useConfig() {
   const [config, setConfigState] = useState(loadConfig);
 
+  useEffect(() => {
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+  }, [config]);
+
   const setConfig = useCallback((updater) => {
     setConfigState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
-      localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
@@ -23,7 +26,6 @@ export function useConfig() {
   const resetConfig = useCallback(() => {
     const copy = { ...DEFAULT_CONFIG, goalAdjustments: { ...DEFAULT_CONFIG.goalAdjustments } };
     setConfigState(copy);
-    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(copy));
   }, []);
 
   return { config, setConfig, resetConfig };

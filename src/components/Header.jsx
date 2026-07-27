@@ -24,12 +24,12 @@ export function Header({ isDark, onToggleDark, onOpenSettings, onOpenInfo }) {
       >
         <div className="radio-pill-group grid grid-cols-2 gap-1 rounded-full bg-surface p-1">
           <Radio value="light" className="flex h-full w-full items-center">
-            <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full p-2 text-sm font-medium text-foreground/60 transition-all aspect-square data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground data-[selected=true]:shadow-sm">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full p-2 text-sm font-medium text-foreground/60 transition-colors aspect-square data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground data-[selected=true]:shadow-sm">
               <Sun className="size-4" />
             </Radio.Content>
           </Radio>
           <Radio value="dark" className="flex h-full w-full items-center">
-            <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full p-2 text-sm font-medium text-foreground/60 transition-all aspect-square data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground data-[selected=true]:shadow-sm">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full p-2 text-sm font-medium text-foreground/60 transition-colors aspect-square data-[selected=true]:bg-surface-secondary data-[selected=true]:text-foreground data-[selected=true]:shadow-sm">
               <Moon className="size-4" />
             </Radio.Content>
           </Radio>

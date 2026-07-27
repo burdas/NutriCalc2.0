@@ -59,13 +59,13 @@ export function CalorieForm({ values, onChange }) {
         <Label className="mb-2">Sexo</Label>
         <div className="radio-pill-group grid w-full grid-cols-2 gap-1 rounded-full bg-surface-secondary p-1.5">
           <Radio value="male" className="flex h-full w-full items-center">
-            <Radio.Content className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-2.5 text-sm font-medium text-foreground/60 transition-all data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-2.5 text-sm font-medium text-foreground/60 transition-colors data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
               <Mars className="size-4" />
               Hombre
             </Radio.Content>
           </Radio>
           <Radio value="female" className="flex h-full w-full items-center">
-            <Radio.Content className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-2.5 text-sm font-medium text-foreground/60 transition-all data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
+            <Radio.Content className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-2.5 text-sm font-medium text-foreground/60 transition-colors data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
               <Venus className="size-4" />
               Mujer
             </Radio.Content>

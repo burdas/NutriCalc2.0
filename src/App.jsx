@@ -1,10 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { Card, Modal, NumberField, Label } from '@heroui/react';
 import { Calculator } from 'lucide-react';
 import { Header } from './components/Header';
 import { CalorieForm } from './components/CalorieForm';
-import { CalorieResults } from './components/CalorieResults';
-import { WeightProjection } from './components/WeightProjection';
+const CalorieResults = lazy(() => import('./components/CalorieResults').then(m => ({ default: m.CalorieResults })));
+const WeightProjection = lazy(() => import('./components/WeightProjection').then(m => ({ default: m.WeightProjection })));
 import { SettingsPanel } from './components/SettingsPanel';
 import { InfoContent } from './components/InfoContent';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -17,7 +17,8 @@ import {
 } from './utils/calculations';
 import { MACRO_PRESETS } from './utils/defaults';
 
-const STORAGE_KEY = 'calorie-form-values';
+const STORAGE_KEY = 'calorie-form-values:v1';
+const TARGET_WEIGHT_KEY = 'calorie-target-weight:v1';
 
 const DEFAULT_VALUES = {
   age: undefined,
@@ -44,7 +45,7 @@ function App() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [targetWeight, setTargetWeight] = useState(() => {
     try {
-      const stored = localStorage.getItem('calorie-target-weight');
+      const stored = localStorage.getItem(TARGET_WEIGHT_KEY);
       return stored ? JSON.parse(stored) : undefined;
     } catch {
       return undefined;
@@ -52,7 +53,7 @@ function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('calorie-target-weight', JSON.stringify(targetWeight));
+    localStorage.setItem(TARGET_WEIGHT_KEY, JSON.stringify(targetWeight));
   }, [targetWeight]);
 
   useEffect(() => {
@@ -105,7 +106,9 @@ function App() {
 
         <div className="flex flex-col lg:h-full">
           {results ? (
-            <CalorieResults {...results} />
+            <Suspense fallback={<div className="flex flex-1 items-center justify-center"><span className="text-muted text-sm">Cargando...</span></div>}>
+              <CalorieResults {...results} />
+            </Suspense>
           ) : (
             <div className="flex flex-1 items-center justify-center rounded-2xl bg-content1 p-8 shadow-sm animate-[fadeIn_0.3s_ease-out]">
               <div className="flex flex-col items-center gap-3 text-center">
@@ -149,12 +152,14 @@ function App() {
           </div>
           <Card>
             <Card.Content>
-              <WeightProjection
-                currentWeight={values.weight}
-                goal={values.goal}
-                goalAdjustment={config.goalAdjustments[values.goal]}
-                targetWeight={targetWeight}
-              />
+              <Suspense fallback={<div className="flex items-center justify-center py-8"><span className="text-muted text-sm">Cargando...</span></div>}>
+                <WeightProjection
+                  currentWeight={values.weight}
+                  goal={values.goal}
+                  goalAdjustment={config.goalAdjustments[values.goal]}
+                  targetWeight={targetWeight}
+                />
+              </Suspense>
             </Card.Content>
           </Card>
         </section>
