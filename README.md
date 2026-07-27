@@ -25,8 +25,8 @@ Calcula tus necesidades calóricas diarias y distribución de macronutrientes us
 ## Scripts
 
 ```bash
-npm run dev      # Inicia servidor de desarrollo
-npm run build    # Compila para producción
-npm run preview  # Previsualiza build de producción
-npm run lint     # Ejecuta Oxlint
+pnpm dev      # Inicia servidor de desarrollo
+pnpm build    # Compila para producción
+pnpm preview  # Previsualiza build de producción
+pnpm lint     # Ejecuta Oxlint
 ```
