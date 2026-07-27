@@ -45,7 +45,7 @@ function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-lg bg-[var(--background)] px-3 py-2 text-sm shadow-lg ring-1 ring-[var(--foreground)]/10">
+    <div className="rounded-lg bg-[var(--background)] px-3 py-2 text-sm shadow-lg ring-1 ring-[var(--accent)]/15">
       <p className="font-bold tabular-nums">{d.weight} kg</p>
       <p className="text-muted text-xs">{d.fullDate}</p>
     </div>
@@ -151,7 +151,7 @@ export function WeightProjection({ currentWeight, goal, goalAdjustment, targetWe
   if (result.projection) {
     return (
       <div ref={chartRef} className="relative h-72 w-full">
-        <div className={`absolute top-8 z-10 flex items-center gap-2 rounded-xl bg-[var(--background)]/90 px-4 py-2 shadow-sm ring-1 ring-[var(--foreground)]/10 backdrop-blur-sm ${goal === 'gain' ? 'left-14' : 'right-14'}`}>
+        <div className={`absolute top-8 z-10 flex items-center gap-2 rounded-xl bg-[var(--background)]/90 px-4 py-2 shadow-sm ring-1 ring-[var(--foreground)]/10 backdrop-blur-sm ${goal === 'gain' ? 'left-4' : 'right-4'}`}>
           <Calendar className="size-4 text-[var(--foreground)]/70" />
           <span className="text-sm font-semibold tabular-nums">
             {result.projection.daysNeeded} días (
@@ -161,32 +161,25 @@ export function WeightProjection({ currentWeight, goal, goalAdjustment, targetWe
           </span>
         </div>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={result.projection.data} margin={{ top: 20, right: 48, left: 3, bottom: 10 }}>
-            <CartesianGrid stroke="var(--foreground)" strokeOpacity={0.08} strokeDasharray="3 3" />
+          <LineChart data={result.projection.data} margin={{ top: 12, right: 12, left: 12, bottom: 12 }}>
+            <CartesianGrid stroke="var(--surface-secondary)" vertical={false} strokeDasharray="4 4" />
             <XAxis
               dataKey="dateLabel"
-              tick={{ fontSize: 12, fill: 'var(--foreground)', fillOpacity: 0.6 }}
+              tick={{ fontSize: 11, fill: 'var(--foreground)', fillOpacity: 0.5 }}
               tickLine={false}
               axisLine={false}
               interval="preserveStartEnd"
               minTickGap={50}
             />
-            <YAxis
-              domain={['auto', 'auto']}
-              tick={{ fontSize: 12, fill: 'var(--foreground)', fillOpacity: 0.6 }}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(v) => `${v}`}
-              width={45}
-            />
+            <YAxis hide domain={['dataMin', 'dataMax']} />
             <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"
               dataKey="weight"
-              stroke="#3b82f6"
+              stroke="var(--accent)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 5, fill: '#3b82f6' }}
+              activeDot={{ r: 5, fill: 'var(--accent)', stroke: 'var(--surface)', strokeWidth: 2 }}
               isAnimationActive={false}
             />
           </LineChart>
