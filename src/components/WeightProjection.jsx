@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -53,6 +53,8 @@ function CustomTooltip({ active, payload }) {
 }
 
 export function WeightProjection({ currentWeight, goal, goalAdjustment, targetWeight }) {
+  const chartRef = useRef(null);
+
   const result = useMemo(() => {
     if (!currentWeight || targetWeight === undefined || targetWeight === null) return {};
 
@@ -75,6 +77,27 @@ export function WeightProjection({ currentWeight, goal, goalAdjustment, targetWe
 
     return { projection: generateData(currentWeight, targetWeight, goalAdjustment) };
   }, [currentWeight, targetWeight, goalAdjustment, goal]);
+
+  useEffect(() => {
+    const container = chartRef.current;
+    if (!container) return;
+
+    const timer = setTimeout(() => {
+      const path = container.querySelector('.recharts-line-curve');
+      if (!path) return;
+
+      const length = path.getTotalLength();
+      path.style.strokeDasharray = length;
+      path.style.strokeDashoffset = length;
+
+      requestAnimationFrame(() => {
+        path.style.transition = 'stroke-dashoffset 2s ease-in-out';
+        path.style.strokeDashoffset = '0';
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [result.projection?.data]);
 
   if (targetWeight === undefined || targetWeight === null) {
     return (
@@ -127,7 +150,7 @@ export function WeightProjection({ currentWeight, goal, goalAdjustment, targetWe
 
   if (result.projection) {
     return (
-      <div className="relative h-72 w-full">
+      <div ref={chartRef} className="relative h-72 w-full">
         <div className={`absolute top-8 z-10 flex items-center gap-2 rounded-xl bg-[var(--background)]/90 px-4 py-2 shadow-sm ring-1 ring-[var(--foreground)]/10 backdrop-blur-sm ${goal === 'gain' ? 'left-14' : 'right-14'}`}>
           <Calendar className="size-4 text-[var(--foreground)]/70" />
           <span className="text-sm font-semibold tabular-nums">
@@ -164,6 +187,7 @@ export function WeightProjection({ currentWeight, goal, goalAdjustment, targetWe
               strokeWidth={2}
               dot={false}
               activeDot={{ r: 5, fill: '#3b82f6' }}
+              isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>
