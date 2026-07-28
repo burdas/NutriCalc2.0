@@ -5,10 +5,12 @@ import { Header } from './components/Header';
 import { CalorieForm } from './components/CalorieForm';
 const CalorieResults = lazy(() => import('./components/CalorieResults').then(m => ({ default: m.CalorieResults })));
 const WeightProjection = lazy(() => import('./components/WeightProjection').then(m => ({ default: m.WeightProjection })));
+const WeeklyMealPlanner = lazy(() => import('./components/WeeklyMealPlanner').then(m => ({ default: m.WeeklyMealPlanner })));
 import { SettingsPanel } from './components/SettingsPanel';
 import { InfoContent } from './components/InfoContent';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useConfig } from './hooks/useConfig';
+import { useMealPlanner } from './hooks/useMealPlanner';
 import {
   calculateBMR,
   calculateTDEE,
@@ -40,6 +42,7 @@ function loadInitialValues() {
 function App() {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const { config, setConfig, resetConfig } = useConfig();
+  const { mealPlan, updateMeal, dailyTotals } = useMealPlanner();
   const [values, setValues] = useState(loadInitialValues);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -81,6 +84,7 @@ function App() {
   }, [values, config.goalAdjustments, macroConfig]);
 
   return (
+    <>
     <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl">
       <Header
         isDark={isDark}
@@ -124,6 +128,7 @@ function App() {
       </main>
 
       {results && (
+        <>
         <section className="pb-12 animate-[fadeInUp_0.5s_ease-out_0.6s_both]">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -163,6 +168,22 @@ function App() {
             </Card.Content>
           </Card>
         </section>
+        </>
+      )}
+    </div>
+
+      {results && (
+        <div className="px-4 lg:px-8">
+        <Suspense fallback={<div className="flex items-center justify-center py-8"><span className="text-muted text-sm">Cargando...</span></div>}>
+          <WeeklyMealPlanner
+            mealPlan={mealPlan}
+            onUpdateMeal={updateMeal}
+            dailyTotals={dailyTotals}
+            target={results.targetCalories}
+            macros={results.macros}
+          />
+        </Suspense>
+        </div>
       )}
 
       <Modal.Backdrop isOpen={infoOpen} onOpenChange={setInfoOpen}>
@@ -196,7 +217,7 @@ function App() {
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
-    </div>
+    </>
   );
 }
 
