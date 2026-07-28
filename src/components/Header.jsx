@@ -3,12 +3,12 @@ import { Info, Settings, Sun, Moon } from 'lucide-react';
 
 export function Header({ isDark, onToggleDark, onOpenSettings, onOpenInfo }) {
   return (
-    <header className="flex items-center justify-between py-6 animate-[fadeIn_0.6s_ease-out]">
+    <header className="flex flex-col items-start gap-4 py-6 sm:flex-row sm:items-center sm:justify-between animate-[fadeIn_0.6s_ease-out]">
       <div>
         <h1 className="text-2xl font-bold">Calculadora de Calorías</h1>
         <p className="text-muted text-sm">Fórmula Mifflin-St Jeor</p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 self-end sm:self-auto">
         <Button isIconOnly variant="tertiary" onPress={onOpenInfo}>
           <Info />
         </Button>
