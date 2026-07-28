@@ -173,7 +173,7 @@ function App() {
     </div>
 
       {results && (
-        <div className="px-4 lg:px-8">
+        <div className="mx-auto max-w-2xl px-4 lg:max-w-none lg:px-8">
         <Suspense fallback={<div className="flex items-center justify-center py-8"><span className="text-muted text-sm">Cargando...</span></div>}>
           <WeeklyMealPlanner
             mealPlan={mealPlan}
