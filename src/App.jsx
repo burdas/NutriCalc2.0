@@ -42,7 +42,7 @@ function loadInitialValues() {
 function App() {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const { config, setConfig, resetConfig } = useConfig();
-  const { mealPlan, updateMeal, addMeal, removeMeal, moveMeal, dailyTotals } = useMealPlanner();
+  const { mealPlan, addMeal, removeMeal, moveMeal, updateMealBulk, updateMealIngredients, dailyTotals } = useMealPlanner();
   const [values, setValues] = useState(loadInitialValues);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -177,10 +177,11 @@ function App() {
         <Suspense fallback={<div className="flex items-center justify-center py-8"><span className="text-muted text-sm">Cargando...</span></div>}>
           <WeeklyMealPlanner
             mealPlan={mealPlan}
-            onUpdateMeal={updateMeal}
             onAddMeal={addMeal}
             onRemoveMeal={removeMeal}
             onMoveMeal={moveMeal}
+            onUpdateMealBulk={updateMealBulk}
+            onUpdateMealIngredients={updateMealIngredients}
             dailyTotals={dailyTotals}
             target={results.targetCalories}
             macros={results.macros}

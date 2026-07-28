@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Card, RadioGroup, Radio, Modal, Button } from '@heroui/react';
+import { useState, useEffect } from 'react';
+import { Card, RadioGroup, Radio, Modal, Button, NumberField, Label } from '@heroui/react';
 import {
   DndContext,
   DragOverlay,
@@ -40,34 +40,33 @@ function containerId(day, slot) {
   return `${day}::${slot}`;
 }
 
-function NumberInput({ value, onChange, label }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</span>
-      <input
-        type="number"
-        min={0}
-        value={value || ''}
-        onChange={(e) => onChange(Number(e.target.value) || 0)}
-        className="w-full min-w-0 rounded-md border border-border/40 bg-field px-3 py-1.5 text-sm tabular-nums text-field-foreground outline-none transition-colors focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      />
-    </div>
-  );
-}
-
-function EditModal({ meal, day, slot, onUpdate, isOpen, onClose }) {
+function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen, onClose }) {
   const [nombre, setNombre] = useState(meal.nombre);
   const [calorias, setCalorias] = useState(meal.calorias);
   const [proteinas, setProteinas] = useState(meal.proteinas);
   const [carbohidratos, setCarbohidratos] = useState(meal.carbohidratos);
   const [grasas, setGrasas] = useState(meal.grasas);
+  const [ingredients, setIngredients] = useState(meal.ingredients || []);
+
+  useEffect(() => {
+    if (ingredients.length > 0) {
+      let cal = 0, prot = 0, carb = 0, gras = 0;
+      for (const ing of ingredients) {
+        cal += ing.calorias || 0;
+        prot += ing.proteinas || 0;
+        carb += ing.carbohidratos || 0;
+        gras += ing.grasas || 0;
+      }
+      setCalorias(cal);
+      setProteinas(prot);
+      setCarbohidratos(carb);
+      setGrasas(gras);
+    }
+  }, [ingredients]);
 
   function handleSave() {
-    onUpdate(day, slot, meal.id, 'nombre', nombre);
-    onUpdate(day, slot, meal.id, 'calorias', calorias);
-    onUpdate(day, slot, meal.id, 'proteinas', proteinas);
-    onUpdate(day, slot, meal.id, 'carbohidratos', carbohidratos);
-    onUpdate(day, slot, meal.id, 'grasas', grasas);
+    onUpdateBulk(day, slot, meal.id, { nombre, calorias, proteinas, carbohidratos, grasas });
+    onUpdateIngredients(day, slot, meal.id, ingredients);
     onClose();
   }
 
@@ -77,7 +76,20 @@ function EditModal({ meal, day, slot, onUpdate, isOpen, onClose }) {
     setProteinas(meal.proteinas);
     setCarbohidratos(meal.carbohidratos);
     setGrasas(meal.grasas);
+    setIngredients(meal.ingredients || []);
     onClose();
+  }
+
+  function addIngredient() {
+    setIngredients([...ingredients, { id: 'i_' + Date.now() + Math.random(), nombre: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 }]);
+  }
+
+  function removeIngredient(id) {
+    setIngredients(ingredients.filter(i => i.id !== id));
+  }
+
+  function updateIngredient(id, field, value) {
+    setIngredients(ingredients.map(i => i.id === id ? { ...i, [field]: value } : i));
   }
 
   return (
@@ -100,13 +112,110 @@ function EditModal({ meal, day, slot, onUpdate, isOpen, onClose }) {
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <NumberInput value={calorias} onChange={setCalorias} label="Calorías" />
-              <NumberInput value={proteinas} onChange={setProteinas} label="Proteínas" />
+              <NumberField value={calorias} onChange={setCalorias} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+                <Label>Calorías</Label>
+                <NumberField.Group>
+                  <NumberField.DecrementButton />
+                  <NumberField.Input placeholder="0" />
+                  <NumberField.IncrementButton />
+                </NumberField.Group>
+              </NumberField>
+              <NumberField value={proteinas} onChange={setProteinas} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+                <Label>Proteínas</Label>
+                <NumberField.Group>
+                  <NumberField.DecrementButton />
+                  <NumberField.Input placeholder="0" />
+                  <NumberField.IncrementButton />
+                </NumberField.Group>
+              </NumberField>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <NumberInput value={carbohidratos} onChange={setCarbohidratos} label="Carbohidratos" />
-              <NumberInput value={grasas} onChange={setGrasas} label="Grasas" />
+              <NumberField value={carbohidratos} onChange={setCarbohidratos} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+                <Label>Carbohidratos</Label>
+                <NumberField.Group>
+                  <NumberField.DecrementButton />
+                  <NumberField.Input placeholder="0" />
+                  <NumberField.IncrementButton />
+                </NumberField.Group>
+              </NumberField>
+              <NumberField value={grasas} onChange={setGrasas} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+                <Label>Grasas</Label>
+                <NumberField.Group>
+                  <NumberField.DecrementButton />
+                  <NumberField.Input placeholder="0" />
+                  <NumberField.IncrementButton />
+                </NumberField.Group>
+              </NumberField>
             </div>
+
+            {ingredients.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Ingredientes</span>
+                </div>
+                {ingredients.map((ing) => (
+                  <div key={ing.id} className="rounded-lg border border-border/20 bg-surface-secondary p-2">
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <input
+                        type="text"
+                        placeholder="Alimento"
+                        value={ing.nombre}
+                        onChange={(e) => updateIngredient(ing.id, 'nombre', e.target.value)}
+                        className="min-w-0 flex-1 rounded-md border border-border/40 bg-field px-3 py-1.5 text-sm text-field-foreground placeholder:text-muted/50 outline-none transition-colors focus:border-accent"
+                      />
+                      <button
+                        onClick={() => removeIngredient(ing.id)}
+                        className="ml-1 cursor-pointer rounded-full p-1 text-muted hover:bg-danger/10 hover:text-danger transition-colors"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <NumberField value={ing.calorias} onChange={(v) => updateIngredient(ing.id, 'calorias', v)} minValue={0} variant="secondary">
+                        <Label>Cal</Label>
+                        <NumberField.Group>
+                          <NumberField.DecrementButton />
+                          <NumberField.Input placeholder="0" />
+                          <NumberField.IncrementButton />
+                        </NumberField.Group>
+                      </NumberField>
+                      <NumberField value={ing.proteinas} onChange={(v) => updateIngredient(ing.id, 'proteinas', v)} minValue={0} variant="secondary">
+                        <Label>Prot</Label>
+                        <NumberField.Group>
+                          <NumberField.DecrementButton />
+                          <NumberField.Input placeholder="0" />
+                          <NumberField.IncrementButton />
+                        </NumberField.Group>
+                      </NumberField>
+                      <NumberField value={ing.carbohidratos} onChange={(v) => updateIngredient(ing.id, 'carbohidratos', v)} minValue={0} variant="secondary">
+                        <Label>Carb</Label>
+                        <NumberField.Group>
+                          <NumberField.DecrementButton />
+                          <NumberField.Input placeholder="0" />
+                          <NumberField.IncrementButton />
+                        </NumberField.Group>
+                      </NumberField>
+                      <NumberField value={ing.grasas} onChange={(v) => updateIngredient(ing.id, 'grasas', v)} minValue={0} variant="secondary">
+                        <Label>Gras</Label>
+                        <NumberField.Group>
+                          <NumberField.DecrementButton />
+                          <NumberField.Input placeholder="0" />
+                          <NumberField.IncrementButton />
+                        </NumberField.Group>
+                      </NumberField>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={addIngredient}
+              className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border-2 border-dashed border-border/40 px-3 py-2 text-xs text-muted transition-colors hover:border-accent/40 hover:text-accent"
+            >
+              <Plus className="size-3.5" />
+              Añadir ingrediente
+            </button>
           </Modal.Body>
           <Modal.Footer className="flex justify-end gap-2">
             <Button variant="tertiary" size="sm" onPress={handleCancel}>
@@ -122,7 +231,7 @@ function EditModal({ meal, day, slot, onUpdate, isOpen, onClose }) {
   );
 }
 
-function SortableMealCard({ meal, day, slot, onUpdate, onRemove }) {
+function SortableMealCard({ meal, day, slot, onRemove, onUpdateBulk, onUpdateIngredients }) {
   const {
     attributes,
     listeners,
@@ -196,7 +305,8 @@ function SortableMealCard({ meal, day, slot, onUpdate, onRemove }) {
         meal={meal}
         day={day}
         slot={slot}
-        onUpdate={onUpdate}
+        onUpdateBulk={onUpdateBulk}
+        onUpdateIngredients={onUpdateIngredients}
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}
       />
@@ -226,7 +336,7 @@ function MealCardPreview({ meal }) {
   );
 }
 
-function MealSlot({ day, slot, meals, onUpdateMeal, onAddMeal, onRemoveMeal }) {
+function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onUpdateMealBulk, onUpdateMealIngredients }) {
   const mealIds = meals.map((m) => m.id);
 
   return (
@@ -240,8 +350,9 @@ function MealSlot({ day, slot, meals, onUpdateMeal, onAddMeal, onRemoveMeal }) {
               meal={meal}
               day={day}
               slot={slot}
-              onUpdate={onUpdateMeal}
               onRemove={onRemoveMeal}
+              onUpdateBulk={onUpdateMealBulk}
+              onUpdateIngredients={onUpdateMealIngredients}
             />
           ))}
         </div>
@@ -257,7 +368,7 @@ function MealSlot({ day, slot, meals, onUpdateMeal, onAddMeal, onRemoveMeal }) {
   );
 }
 
-function DayColumn({ day, mealPlan, onUpdateMeal, onAddMeal, onRemoveMeal, dailyTotals, target, macros }) {
+function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
   const totals = dailyTotals[day];
   const progress = target ? Math.min(Math.round((totals.calorias / target) * 100), 100) : 0;
 
@@ -286,9 +397,10 @@ function DayColumn({ day, mealPlan, onUpdateMeal, onAddMeal, onRemoveMeal, daily
             day={day}
             slot={slot}
             meals={mealPlan[day][slot]}
-            onUpdateMeal={onUpdateMeal}
             onAddMeal={onAddMeal}
             onRemoveMeal={onRemoveMeal}
+            onUpdateMealBulk={onUpdateMealBulk}
+            onUpdateMealIngredients={onUpdateMealIngredients}
           />
         ))}
       </Card.Content>
@@ -324,7 +436,7 @@ function DayColumn({ day, mealPlan, onUpdateMeal, onAddMeal, onRemoveMeal, daily
   );
 }
 
-export function WeeklyMealPlanner({ mealPlan, onUpdateMeal, onAddMeal, onRemoveMeal, onMoveMeal, dailyTotals, target, macros }) {
+export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
   const [selectedDay, setSelectedDay] = useState('lunes');
   const [activeMeal, setActiveMeal] = useState(null);
 
@@ -426,9 +538,10 @@ export function WeeklyMealPlanner({ mealPlan, onUpdateMeal, onAddMeal, onRemoveM
                 <DayColumn
                   day={day}
                   mealPlan={mealPlan}
-                  onUpdateMeal={onUpdateMeal}
                   onAddMeal={onAddMeal}
                   onRemoveMeal={onRemoveMeal}
+                  onUpdateMealBulk={onUpdateMealBulk}
+                  onUpdateMealIngredients={onUpdateMealIngredients}
                   dailyTotals={dailyTotals}
                   target={target}
                   macros={macros}
@@ -442,9 +555,10 @@ export function WeeklyMealPlanner({ mealPlan, onUpdateMeal, onAddMeal, onRemoveM
           <DayColumn
             day={selectedDay}
             mealPlan={mealPlan}
-            onUpdateMeal={onUpdateMeal}
             onAddMeal={onAddMeal}
             onRemoveMeal={onRemoveMeal}
+            onUpdateMealBulk={onUpdateMealBulk}
+            onUpdateMealIngredients={onUpdateMealIngredients}
             dailyTotals={dailyTotals}
             target={target}
             macros={macros}

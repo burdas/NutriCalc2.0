@@ -17,7 +17,8 @@ function generateId() {
   return `m_${++_idCounter}`;
 }
 
-const EMPTY_MEAL = () => ({ id: generateId(), nombre: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 });
+const EMPTY_MEAL = () => ({ id: generateId(), nombre: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0, ingredients: [] });
+
 
 function createDefaultPlan() {
   const plan = {};
@@ -54,6 +55,34 @@ export function useMealPlanner() {
           ...prev[day],
           [slot]: prev[day][slot].map((m) =>
             m.id === mealId ? { ...m, [field]: value } : m
+          ),
+        },
+      })
+    );
+  }, [persist]);
+
+  const updateMealBulk = useCallback((day, slot, mealId, fields) => {
+    setMealPlan((prev) =>
+      persist({
+        ...prev,
+        [day]: {
+          ...prev[day],
+          [slot]: prev[day][slot].map((m) =>
+            m.id === mealId ? { ...m, ...fields } : m
+          ),
+        },
+      })
+    );
+  }, [persist]);
+
+  const updateMealIngredients = useCallback((day, slot, mealId, ingredients) => {
+    setMealPlan((prev) =>
+      persist({
+        ...prev,
+        [day]: {
+          ...prev[day],
+          [slot]: prev[day][slot].map((m) =>
+            m.id === mealId ? { ...m, ingredients } : m
           ),
         },
       })
@@ -120,5 +149,5 @@ export function useMealPlanner() {
     return totals;
   }, [mealPlan]);
 
-  return { mealPlan, updateMeal, addMeal, removeMeal, moveMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
+  return { mealPlan, updateMeal, updateMealBulk, updateMealIngredients, addMeal, removeMeal, moveMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
 }
