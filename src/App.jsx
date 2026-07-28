@@ -42,7 +42,7 @@ function loadInitialValues() {
 function App() {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const { config, setConfig, resetConfig } = useConfig();
-  const { mealPlan, updateMeal, dailyTotals } = useMealPlanner();
+  const { mealPlan, updateMeal, addMeal, removeMeal, moveMeal, dailyTotals } = useMealPlanner();
   const [values, setValues] = useState(loadInitialValues);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
@@ -178,6 +178,9 @@ function App() {
           <WeeklyMealPlanner
             mealPlan={mealPlan}
             onUpdateMeal={updateMeal}
+            onAddMeal={addMeal}
+            onRemoveMeal={removeMeal}
+            onMoveMeal={moveMeal}
             dailyTotals={dailyTotals}
             target={results.targetCalories}
             macros={results.macros}

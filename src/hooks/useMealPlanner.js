@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 
-const STORAGE_KEY = 'meal-plan:v1';
+const STORAGE_KEY = 'meal-plan:v2';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const MEAL_SLOTS = ['desayuno', 'comida', 'merienda', 'cena', 'otros'];
@@ -12,14 +12,19 @@ const SLOT_LABELS = {
   otros: 'Otros',
 };
 
-const DEFAULT_MEAL = { nombre: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 };
+let _idCounter = Date.now();
+function generateId() {
+  return `m_${++_idCounter}`;
+}
+
+const EMPTY_MEAL = () => ({ id: generateId(), nombre: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 });
 
 function createDefaultPlan() {
   const plan = {};
   for (const day of DAYS) {
     plan[day] = {};
     for (const slot of MEAL_SLOTS) {
-      plan[day][slot] = { ...DEFAULT_MEAL };
+      plan[day][slot] = [EMPTY_MEAL()];
     }
   }
   return plan;
@@ -28,20 +33,7 @@ function createDefaultPlan() {
 function loadPlan() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      const plan = createDefaultPlan();
-      for (const day of DAYS) {
-        if (parsed[day]) {
-          for (const slot of MEAL_SLOTS) {
-            if (parsed[day][slot]) {
-              plan[day][slot] = { ...DEFAULT_MEAL, ...parsed[day][slot] };
-            }
-          }
-        }
-      }
-      return plan;
-    }
+    if (stored) return JSON.parse(stored);
   } catch {}
   return createDefaultPlan();
 }
@@ -49,16 +41,61 @@ function loadPlan() {
 export function useMealPlanner() {
   const [mealPlan, setMealPlan] = useState(loadPlan);
 
-  const updateMeal = useCallback((day, slot, field, value) => {
-    setMealPlan((prev) => {
-      const next = {
-        ...prev,
-        [day]: { ...prev[day], [slot]: { ...prev[day][slot], [field]: value } },
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+  const persist = useCallback((next) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    return next;
   }, []);
+
+  const updateMeal = useCallback((day, slot, mealId, field, value) => {
+    setMealPlan((prev) =>
+      persist({
+        ...prev,
+        [day]: {
+          ...prev[day],
+          [slot]: prev[day][slot].map((m) =>
+            m.id === mealId ? { ...m, [field]: value } : m
+          ),
+        },
+      })
+    );
+  }, [persist]);
+
+  const addMeal = useCallback((day, slot) => {
+    setMealPlan((prev) =>
+      persist({
+        ...prev,
+        [day]: { ...prev[day], [slot]: [...prev[day][slot], EMPTY_MEAL()] },
+      })
+    );
+  }, [persist]);
+
+  const removeMeal = useCallback((day, slot, mealId) => {
+    setMealPlan((prev) =>
+      persist({
+        ...prev,
+        [day]: {
+          ...prev[day],
+          [slot]: prev[day][slot].filter((m) => m.id !== mealId),
+        },
+      })
+    );
+  }, [persist]);
+
+  const moveMeal = useCallback((sourceDay, sourceSlot, sourceIndex, destDay, destSlot, destIndex) => {
+    setMealPlan((prev) => {
+      const sourceArr = [...prev[sourceDay][sourceSlot]];
+      const [moved] = sourceArr.splice(sourceIndex, 1);
+
+      const destArr = [...prev[destDay][destSlot]];
+      destArr.splice(destIndex, 0, moved);
+
+      return persist({
+        ...prev,
+        [sourceDay]: { ...prev[sourceDay], [sourceSlot]: sourceArr },
+        [destDay]: { ...prev[destDay], [destSlot]: destArr },
+      });
+    });
+  }, [persist]);
 
   const dailyTotals = useMemo(() => {
     const totals = {};
@@ -67,12 +104,14 @@ export function useMealPlanner() {
       const dayPlan = mealPlan[day];
       if (dayPlan) {
         for (const slot of MEAL_SLOTS) {
-          const meal = dayPlan[slot];
-          if (meal) {
-            cal += meal.calorias || 0;
-            prot += meal.proteinas || 0;
-            carb += meal.carbohidratos || 0;
-            gras += meal.grasas || 0;
+          const meals = dayPlan[slot];
+          if (meals) {
+            for (const meal of meals) {
+              cal += meal.calorias || 0;
+              prot += meal.proteinas || 0;
+              carb += meal.carbohidratos || 0;
+              gras += meal.grasas || 0;
+            }
           }
         }
       }
@@ -81,5 +120,5 @@ export function useMealPlanner() {
     return totals;
   }, [mealPlan]);
 
-  return { mealPlan, updateMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
+  return { mealPlan, updateMeal, addMeal, removeMeal, moveMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
 }

@@ -1,5 +1,21 @@
 import { useState } from 'react';
-import { Card, RadioGroup, Radio } from '@heroui/react';
+import { Card, RadioGroup, Radio, Modal, Button } from '@heroui/react';
+import {
+  DndContext,
+  DragOverlay,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, Plus, X, Pencil } from 'lucide-react';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const DAY_ABBR = {
@@ -20,59 +36,228 @@ const SLOT_LABELS = {
   otros: 'Otros',
 };
 
+function containerId(day, slot) {
+  return `${day}::${slot}`;
+}
+
 function NumberInput({ value, onChange, label }) {
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</span>
       <input
         type="number"
         min={0}
         value={value || ''}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
-        className="w-full min-w-0 rounded-md border border-border/40 bg-field px-1 py-0.5 text-xs tabular-nums text-field-foreground outline-none transition-colors focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="w-full min-w-0 rounded-md border border-border/40 bg-field px-3 py-1.5 text-sm tabular-nums text-field-foreground outline-none transition-colors focus:border-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
-      <span className="whitespace-nowrap text-[10px] text-muted">{label}</span>
     </div>
   );
 }
 
-function MealSlot({ day, slot, meal, onUpdateMeal }) {
+function EditModal({ meal, day, slot, onUpdate, isOpen, onClose }) {
+  const [nombre, setNombre] = useState(meal.nombre);
+  const [calorias, setCalorias] = useState(meal.calorias);
+  const [proteinas, setProteinas] = useState(meal.proteinas);
+  const [carbohidratos, setCarbohidratos] = useState(meal.carbohidratos);
+  const [grasas, setGrasas] = useState(meal.grasas);
+
+  function handleSave() {
+    onUpdate(day, slot, meal.id, 'nombre', nombre);
+    onUpdate(day, slot, meal.id, 'calorias', calorias);
+    onUpdate(day, slot, meal.id, 'proteinas', proteinas);
+    onUpdate(day, slot, meal.id, 'carbohidratos', carbohidratos);
+    onUpdate(day, slot, meal.id, 'grasas', grasas);
+    onClose();
+  }
+
+  function handleCancel() {
+    setNombre(meal.nombre);
+    setCalorias(meal.calorias);
+    setProteinas(meal.proteinas);
+    setCarbohidratos(meal.carbohidratos);
+    setGrasas(meal.grasas);
+    onClose();
+  }
+
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-semibold text-muted">{SLOT_LABELS[slot]}</span>
-      <input
-        type="text"
-        placeholder="¿Qué comiste?"
-        value={meal.nombre}
-        onChange={(e) => onUpdateMeal(day, slot, 'nombre', e.target.value)}
-        className="w-full rounded-md border border-border/40 bg-field px-2 py-1 text-xs text-field-foreground placeholder:text-muted/50 outline-none transition-colors focus:border-accent"
+    <Modal.Backdrop isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <Modal.Container size="sm">
+        <Modal.Dialog>
+          <Modal.CloseTrigger />
+          <Modal.Header>
+            <Modal.Heading>Editar comida</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Nombre</span>
+              <input
+                type="text"
+                placeholder="¿Qué comiste?"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="w-full rounded-md border border-border/40 bg-field px-3 py-2 text-sm text-field-foreground placeholder:text-muted/50 outline-none transition-colors focus:border-accent"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <NumberInput value={calorias} onChange={setCalorias} label="Calorías" />
+              <NumberInput value={proteinas} onChange={setProteinas} label="Proteínas" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <NumberInput value={carbohidratos} onChange={setCarbohidratos} label="Carbohidratos" />
+              <NumberInput value={grasas} onChange={setGrasas} label="Grasas" />
+            </div>
+          </Modal.Body>
+          <Modal.Footer className="flex justify-end gap-2">
+            <Button variant="tertiary" size="sm" onPress={handleCancel}>
+              Cancelar
+            </Button>
+            <Button variant="primary" size="sm" onPress={handleSave}>
+              Guardar
+            </Button>
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  );
+}
+
+function SortableMealCard({ meal, day, slot, onUpdate, onRemove }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortDragging,
+  } = useSortable({ id: meal.id, data: { day, slot, type: 'meal' } });
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [marqueeHover, setMarqueeHover] = useState(false);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortDragging ? 0.4 : 1,
+  };
+
+  return (
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="rounded-xl border bg-content1 shadow-sm"
+      >
+        <div className="flex items-stretch">
+          <button
+            {...attributes}
+            {...listeners}
+            className="flex cursor-grab items-center rounded-l-xl px-1.5 text-muted hover:text-foreground active:cursor-grabbing touch-none"
+            aria-label="Arrastrar comida"
+          >
+            <GripVertical className="size-4" />
+          </button>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-2 py-2.5">
+            <div className="flex items-center gap-1.5">
+              <p className={`min-w-0 flex-1 truncate text-sm font-medium ${meal.nombre ? 'text-foreground' : 'italic text-muted/50'}`}>
+                {meal.nombre || 'Sin nombre'}
+              </p>
+              <button
+                onClick={() => setEditOpen(true)}
+                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors"
+                aria-label="Editar comida"
+              >
+                <Pencil className="size-3.5" />
+              </button>
+              <button
+                onClick={() => onRemove(day, slot, meal.id)}
+                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-danger/10 hover:text-danger transition-colors"
+                aria-label="Eliminar comida"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+            <div
+              className="overflow-hidden whitespace-nowrap"
+              onMouseEnter={() => setMarqueeHover(true)}
+              onMouseLeave={() => setMarqueeHover(false)}
+            >
+              <span
+                className="inline-block text-xs text-muted"
+                style={{ animation: marqueeHover ? 'marquee 6s linear infinite' : 'none' }}
+              >
+                {meal.calorias || 0} cal &middot; {meal.proteinas || 0}g prot &middot; {meal.carbohidratos || 0}g carb &middot; {meal.grasas || 0}g gras
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <EditModal
+        meal={meal}
+        day={day}
+        slot={slot}
+        onUpdate={onUpdate}
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
       />
-      <div className="grid grid-cols-4 gap-1">
-        <NumberInput
-          value={meal.calorias}
-          onChange={(v) => onUpdateMeal(day, slot, 'calorias', v)}
-          label="cal"
-        />
-        <NumberInput
-          value={meal.proteinas}
-          onChange={(v) => onUpdateMeal(day, slot, 'proteinas', v)}
-          label="p"
-        />
-        <NumberInput
-          value={meal.carbohidratos}
-          onChange={(v) => onUpdateMeal(day, slot, 'carbohidratos', v)}
-          label="c"
-        />
-        <NumberInput
-          value={meal.grasas}
-          onChange={(v) => onUpdateMeal(day, slot, 'grasas', v)}
-          label="g"
-        />
+    </>
+  );
+}
+
+function MealCardPreview({ meal }) {
+  return (
+    <div className="rounded-xl border bg-content1 shadow-lg ring-2 ring-accent">
+      <div className="flex items-stretch">
+        <div className="flex items-center rounded-l-xl px-1.5 text-muted">
+          <GripVertical className="size-4" />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-2 py-2.5">
+          <p className={`min-w-0 flex-1 truncate text-sm font-medium ${meal.nombre ? 'text-foreground' : 'italic text-muted/50'}`}>
+            {meal.nombre || 'Sin nombre'}
+          </p>
+          <div className="overflow-hidden whitespace-nowrap">
+            <span className="inline-block text-xs text-muted" style={{ animation: 'marquee 6s linear infinite' }}>
+              {meal.calorias || 0} cal &middot; {meal.proteinas || 0}g prot &middot; {meal.carbohidratos || 0}g carb &middot; {meal.grasas || 0}g gras
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function DayColumn({ day, mealPlan, onUpdateMeal, dailyTotals, target, macros }) {
+function MealSlot({ day, slot, meals, onUpdateMeal, onAddMeal, onRemoveMeal }) {
+  const mealIds = meals.map((m) => m.id);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-xs font-semibold text-muted">{SLOT_LABELS[slot]}</span>
+      <SortableContext items={mealIds} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-2" id={containerId(day, slot)}>
+          {meals.map((meal) => (
+            <SortableMealCard
+              key={meal.id}
+              meal={meal}
+              day={day}
+              slot={slot}
+              onUpdate={onUpdateMeal}
+              onRemove={onRemoveMeal}
+            />
+          ))}
+        </div>
+      </SortableContext>
+      <button
+        onClick={() => onAddMeal(day, slot)}
+        className="cursor-pointer flex items-center justify-center gap-1 rounded-lg border-2 border-dashed border-border/40 px-3 py-2 text-xs text-muted transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        <Plus className="size-3.5" />
+        Añadir comida
+      </button>
+    </div>
+  );
+}
+
+function DayColumn({ day, mealPlan, onUpdateMeal, onAddMeal, onRemoveMeal, dailyTotals, target, macros }) {
   const totals = dailyTotals[day];
   const progress = target ? Math.min(Math.round((totals.calorias / target) * 100), 100) : 0;
 
@@ -94,14 +279,16 @@ function DayColumn({ day, mealPlan, onUpdateMeal, dailyTotals, target, macros })
           </div>
         )}
       </Card.Header>
-      <Card.Content className="flex flex-col gap-3 py-2">
+      <Card.Content className="flex flex-col gap-4 py-2">
         {MEAL_SLOTS.map((slot) => (
           <MealSlot
             key={slot}
             day={day}
             slot={slot}
-            meal={mealPlan[day][slot]}
+            meals={mealPlan[day][slot]}
             onUpdateMeal={onUpdateMeal}
+            onAddMeal={onAddMeal}
+            onRemoveMeal={onRemoveMeal}
           />
         ))}
       </Card.Content>
@@ -137,61 +324,137 @@ function DayColumn({ day, mealPlan, onUpdateMeal, dailyTotals, target, macros })
   );
 }
 
-export function WeeklyMealPlanner({ mealPlan, onUpdateMeal, dailyTotals, target, macros }) {
+export function WeeklyMealPlanner({ mealPlan, onUpdateMeal, onAddMeal, onRemoveMeal, onMoveMeal, dailyTotals, target, macros }) {
   const [selectedDay, setSelectedDay] = useState('lunes');
+  const [activeMeal, setActiveMeal] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
+  );
+
+  function findContainer(mealId) {
+    for (const day of DAYS) {
+      for (const slot of MEAL_SLOTS) {
+        const meals = mealPlan[day][slot];
+        const idx = meals.findIndex((m) => m.id === mealId);
+        if (idx !== -1) return { day, slot, index: idx };
+      }
+    }
+    return null;
+  }
+
+  function handleDragStart(event) {
+    const mealId = event.active.id;
+    const found = findContainer(mealId);
+    if (!found) return;
+    setActiveMeal(mealPlan[found.day][found.slot][found.index]);
+  }
+
+  function handleDragEnd(event) {
+    setActiveMeal(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    const src = findContainer(activeId);
+    if (!src) return;
+
+    let destDay = src.day;
+    let destSlot = src.slot;
+    let destIndex;
+
+    const overStr = String(overId);
+    if (overStr.includes('::')) {
+      const [d, s] = overStr.split('::');
+      destDay = d;
+      destSlot = s;
+      destIndex = mealPlan[d][s].length;
+    } else {
+      const overMeal = findContainer(overId);
+      if (!overMeal) return;
+      destDay = overMeal.day;
+      destSlot = overMeal.slot;
+      destIndex = overMeal.index;
+    }
+
+    if (src.day === destDay && src.slot === destSlot && src.index === destIndex) return;
+    if (src.day === destDay && src.slot === destSlot && src.index < destIndex) {
+      destIndex = Math.max(0, destIndex - 1);
+    }
+
+    onMoveMeal(src.day, src.slot, src.index, destDay, destSlot, destIndex);
+  }
 
   return (
-    <section className="pb-12 animate-[fadeInUp_0.5s_ease-out_0.7s_both]">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold">Planificador semanal de comidas</h2>
-        <p className="text-muted text-sm">
-          Registra tus comidas diarias y compáralas con tus objetivos calóricos y de macronutrientes
-        </p>
-      </div>
-
-      <RadioGroup
-        value={selectedDay}
-        onChange={setSelectedDay}
-        className="mb-4 lg:hidden"
-      >
-        <div className="radio-pill-group grid w-full grid-cols-7 gap-1 rounded-full bg-surface-secondary p-1.5">
-          {DAYS.map((day) => (
-            <Radio key={day} value={day} className="flex items-center">
-              <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full py-1.5 text-xs font-medium text-foreground/60 transition-colors data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
-                {DAY_ABBR[day]}
-              </Radio.Content>
-            </Radio>
-          ))}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <section className="pb-12 animate-[fadeInUp_0.5s_ease-out_0.7s_both]">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold">Planificador semanal de comidas</h2>
+          <p className="text-muted text-sm">
+            Registra tus comidas diarias y compáralas con tus objetivos calóricos y de macronutrientes
+          </p>
         </div>
-      </RadioGroup>
 
-      <div className="hidden overflow-x-auto pb-4 lg:block">
-        <div className="flex gap-4">
-          {DAYS.map((day) => (
-            <div key={day} className="min-w-[200px] flex-1">
-              <DayColumn
-                day={day}
-                mealPlan={mealPlan}
-                onUpdateMeal={onUpdateMeal}
-                dailyTotals={dailyTotals}
-                target={target}
-                macros={macros}
-              />
-            </div>
-          ))}
+        <RadioGroup
+          value={selectedDay}
+          onChange={setSelectedDay}
+          className="mb-4 lg:hidden"
+        >
+          <div className="radio-pill-group grid w-full grid-cols-7 gap-1 rounded-full bg-surface-secondary p-1.5">
+            {DAYS.map((day) => (
+              <Radio key={day} value={day} className="flex items-center">
+                <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full py-1.5 text-xs font-medium text-foreground/60 transition-colors data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
+                  {DAY_ABBR[day]}
+                </Radio.Content>
+              </Radio>
+            ))}
+          </div>
+        </RadioGroup>
+
+        <div className="hidden overflow-x-auto pb-4 lg:block">
+          <div className="flex gap-4">
+            {DAYS.map((day) => (
+              <div key={day} className="min-w-[200px] flex-1">
+                <DayColumn
+                  day={day}
+                  mealPlan={mealPlan}
+                  onUpdateMeal={onUpdateMeal}
+                  onAddMeal={onAddMeal}
+                  onRemoveMeal={onRemoveMeal}
+                  dailyTotals={dailyTotals}
+                  target={target}
+                  macros={macros}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div key={selectedDay} className="animate-[fadeIn_0.2s_ease-out] lg:hidden">
-        <DayColumn
-          day={selectedDay}
-          mealPlan={mealPlan}
-          onUpdateMeal={onUpdateMeal}
-          dailyTotals={dailyTotals}
-          target={target}
-          macros={macros}
-        />
-      </div>
-    </section>
+        <div key={selectedDay} className="animate-[fadeIn_0.2s_ease-out] lg:hidden">
+          <DayColumn
+            day={selectedDay}
+            mealPlan={mealPlan}
+            onUpdateMeal={onUpdateMeal}
+            onAddMeal={onAddMeal}
+            onRemoveMeal={onRemoveMeal}
+            dailyTotals={dailyTotals}
+            target={target}
+            macros={macros}
+          />
+        </div>
+      </section>
+
+      <DragOverlay>
+        {activeMeal ? <MealCardPreview meal={activeMeal} /> : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
