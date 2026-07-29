@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, RadioGroup, Radio, Modal, Button, NumberField, Label } from '@heroui/react';
+import { calculateCalories } from '../utils/calculations';
 import {
   DndContext,
   DragOverlay,
@@ -42,22 +43,21 @@ function containerId(day, slot) {
 
 function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen, onClose }) {
   const [nombre, setNombre] = useState(meal.nombre);
-  const [calorias, setCalorias] = useState(meal.calorias);
   const [proteinas, setProteinas] = useState(meal.proteinas);
   const [carbohidratos, setCarbohidratos] = useState(meal.carbohidratos);
   const [grasas, setGrasas] = useState(meal.grasas);
   const [ingredients, setIngredients] = useState(meal.ingredients || []);
 
+  const calorias = calculateCalories(proteinas, carbohidratos, grasas);
+
   useEffect(() => {
     if (ingredients.length > 0) {
-      let cal = 0, prot = 0, carb = 0, gras = 0;
+      let prot = 0, carb = 0, gras = 0;
       for (const ing of ingredients) {
-        cal += ing.calorias || 0;
         prot += ing.proteinas || 0;
         carb += ing.carbohidratos || 0;
         gras += ing.grasas || 0;
       }
-      setCalorias(cal);
       setProteinas(prot);
       setCarbohidratos(carb);
       setGrasas(gras);
@@ -72,7 +72,6 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
 
   function handleCancel() {
     setNombre(meal.nombre);
-    setCalorias(meal.calorias);
     setProteinas(meal.proteinas);
     setCarbohidratos(meal.carbohidratos);
     setGrasas(meal.grasas);
@@ -89,7 +88,12 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
   }
 
   function updateIngredient(id, field, value) {
-    setIngredients(ingredients.map(i => i.id === id ? { ...i, [field]: value } : i));
+    setIngredients(ingredients.map(i => {
+      if (i.id !== id) return i;
+      const updated = { ...i, [field]: value };
+      updated.calorias = calculateCalories(updated.proteinas, updated.carbohidratos, updated.grasas);
+      return updated;
+    }));
   }
 
   return (
@@ -112,14 +116,13 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <NumberField value={calorias} onChange={setCalorias} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+              <div className="flex flex-col gap-1">
                 <Label>Calorías</Label>
-                <NumberField.Group>
-                  <NumberField.DecrementButton />
-                  <NumberField.Input placeholder="0" />
-                  <NumberField.IncrementButton />
-                </NumberField.Group>
-              </NumberField>
+                <div className="flex h-9 items-center gap-1.5 rounded-xl border border-border/20 bg-surface-secondary px-4">
+                  <span className="text-lg font-bold tabular-nums leading-none">{calorias}</span>
+                  <span className="text-xs font-medium text-muted">kcal</span>
+                </div>
+              </div>
               <NumberField value={proteinas} onChange={setProteinas} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
                 <Label>Proteínas</Label>
                 <NumberField.Group>
@@ -171,14 +174,13 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
                       </button>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <NumberField value={ing.calorias} onChange={(v) => updateIngredient(ing.id, 'calorias', v)} minValue={0} variant="secondary">
+                      <div className="flex flex-col gap-1">
                         <Label>Cal</Label>
-                        <NumberField.Group>
-                          <NumberField.DecrementButton />
-                          <NumberField.Input placeholder="0" />
-                          <NumberField.IncrementButton />
-                        </NumberField.Group>
-                      </NumberField>
+                        <div className="flex h-9 items-center gap-1 rounded-xl border border-border/20 bg-surface-tertiary px-3">
+                          <span className="text-sm font-bold tabular-nums leading-none">{ing.calorias}</span>
+                          <span className="text-[10px] font-medium text-muted">kcal</span>
+                        </div>
+                      </div>
                       <NumberField value={ing.proteinas} onChange={(v) => updateIngredient(ing.id, 'proteinas', v)} minValue={0} variant="secondary">
                         <Label>Prot</Label>
                         <NumberField.Group>

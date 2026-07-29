@@ -25,6 +25,10 @@ export function calculateTargetCalories(tdee, goal, goalAdjustments = DEFAULT_GO
   return Math.round(tdee + (goalAdjustments[goal] ?? 0));
 }
 
+export function calculateCalories(proteinas, carbohidratos, grasas) {
+  return (proteinas || 0) * 4 + (carbohidratos || 0) * 4 + (grasas || 0) * 9;
+}
+
 export function calculateMacros(targetCalories, weight, macroConfig = {}) {
   const { proteinPerKg = 1.8, fatPercent = 0.25 } = macroConfig;
   const proteinG = Math.round(proteinPerKg * weight);
