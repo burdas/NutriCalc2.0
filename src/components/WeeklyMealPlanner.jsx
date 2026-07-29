@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, RadioGroup, Radio, Modal, Button, NumberField, Label } from '@heroui/react';
+import { Card, RadioGroup, Radio, Modal, Button, NumberField, Label, ComboBox, Input, ListBox } from '@heroui/react';
 import { calculateCalories } from '../utils/calculations';
 import {
   DndContext,
@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Plus, X, Pencil } from 'lucide-react';
+import { useOpenFoodFacts } from '../hooks/useOpenFoodFacts';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const DAY_ABBR = {
@@ -39,6 +40,111 @@ const SLOT_LABELS = {
 
 function containerId(day, slot) {
   return `${day}::${slot}`;
+}
+
+function IngredientRow({ ing, onUpdate, onRemove }) {
+  const { results, loading, search, clear } = useOpenFoodFacts();
+
+  return (
+    <div className="rounded-lg border border-border/20 bg-surface-secondary p-2">
+      <div className="mb-1.5 flex items-center justify-between gap-1">
+        <ComboBox
+          allowsCustomValue
+          allowsEmptyCollection
+          menuTrigger="input"
+          defaultFilter={() => true}
+          inputValue={ing.nombre}
+          onInputChange={(value) => {
+            onUpdate(ing.id, 'nombre', value);
+            if (value.length >= 2) {
+              search(value);
+            } else {
+              clear();
+            }
+          }}
+          onSelectionChange={(key) => {
+            if (key) {
+              const p = results.find(r => r.code === key);
+              if (p) {
+                onUpdate(ing.id, 'nombre', p.product_name);
+                onUpdate(ing.id, 'calorias', p.calorias);
+                onUpdate(ing.id, 'proteinas', p.proteinas);
+                onUpdate(ing.id, 'carbohidratos', p.carbohidratos);
+                onUpdate(ing.id, 'grasas', p.grasas);
+              }
+            }
+          }}
+          className="flex-1"
+        >
+          <ComboBox.InputGroup>
+            <Input placeholder="Buscar alimento..." />
+            <ComboBox.Trigger />
+          </ComboBox.InputGroup>
+          <ComboBox.Popover>
+            <ListBox renderEmptyState={() => (
+              <div className="flex items-center justify-center py-4">
+                <span className="text-xs text-muted">
+                  {loading ? 'Buscando…' : 'Sin resultados'}
+                </span>
+              </div>
+            )}>
+              {results.map((p) => (
+                <ListBox.Item key={p.code} id={p.code} textValue={p.product_name}>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium">{p.product_name}</span>
+                    {p.brands && <span className="text-[10px] text-muted">{p.brands}</span>}
+                    <span className="text-[10px] text-muted">
+                      {p.calorias} kcal · P {p.proteinas}g · C {p.carbohidratos}g · G {p.grasas}g
+                    </span>
+                  </div>
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </ComboBox.Popover>
+        </ComboBox>
+        <button
+          onClick={() => onRemove(ing.id)}
+          className="cursor-pointer rounded-full p-1 text-muted hover:bg-danger/10 hover:text-danger transition-colors shrink-0"
+        >
+          <X className="size-3" />
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
+          <Label>Cal</Label>
+          <div className="flex h-9 items-center gap-1 rounded-xl border border-border/20 bg-surface-tertiary px-3">
+            <span className="text-sm font-bold tabular-nums leading-none">{ing.calorias}</span>
+            <span className="text-[10px] font-medium text-muted">kcal</span>
+          </div>
+        </div>
+        <NumberField value={ing.proteinas} onChange={(v) => onUpdate(ing.id, 'proteinas', v)} minValue={0} variant="secondary">
+          <Label>Prot</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input placeholder="0" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField value={ing.carbohidratos} onChange={(v) => onUpdate(ing.id, 'carbohidratos', v)} minValue={0} variant="secondary">
+          <Label>Carb</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input placeholder="0" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+        <NumberField value={ing.grasas} onChange={(v) => onUpdate(ing.id, 'grasas', v)} minValue={0} variant="secondary">
+          <Label>Gras</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input placeholder="0" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+      </div>
+    </div>
+  );
 }
 
 function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen, onClose }) {
@@ -104,7 +210,7 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
           <Modal.Header>
             <Modal.Heading>Editar comida</Modal.Heading>
           </Modal.Header>
-          <Modal.Body className="flex flex-col gap-3">
+          <Modal.Body className="flex flex-col gap-3 overflow-visible">
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Nombre</span>
               <input
@@ -157,56 +263,12 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
                   <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Ingredientes</span>
                 </div>
                 {ingredients.map((ing) => (
-                  <div key={ing.id} className="rounded-lg border border-border/20 bg-surface-secondary p-2">
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <input
-                        type="text"
-                        placeholder="Alimento"
-                        value={ing.nombre}
-                        onChange={(e) => updateIngredient(ing.id, 'nombre', e.target.value)}
-                        className="min-w-0 flex-1 rounded-md border border-border/40 bg-field px-3 py-1.5 text-sm text-field-foreground placeholder:text-muted/50 outline-none transition-colors focus:border-accent"
-                      />
-                      <button
-                        onClick={() => removeIngredient(ing.id)}
-                        className="ml-1 cursor-pointer rounded-full p-1 text-muted hover:bg-danger/10 hover:text-danger transition-colors"
-                      >
-                        <X className="size-3" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex flex-col gap-1">
-                        <Label>Cal</Label>
-                        <div className="flex h-9 items-center gap-1 rounded-xl border border-border/20 bg-surface-tertiary px-3">
-                          <span className="text-sm font-bold tabular-nums leading-none">{ing.calorias}</span>
-                          <span className="text-[10px] font-medium text-muted">kcal</span>
-                        </div>
-                      </div>
-                      <NumberField value={ing.proteinas} onChange={(v) => updateIngredient(ing.id, 'proteinas', v)} minValue={0} variant="secondary">
-                        <Label>Prot</Label>
-                        <NumberField.Group>
-                          <NumberField.DecrementButton />
-                          <NumberField.Input placeholder="0" />
-                          <NumberField.IncrementButton />
-                        </NumberField.Group>
-                      </NumberField>
-                      <NumberField value={ing.carbohidratos} onChange={(v) => updateIngredient(ing.id, 'carbohidratos', v)} minValue={0} variant="secondary">
-                        <Label>Carb</Label>
-                        <NumberField.Group>
-                          <NumberField.DecrementButton />
-                          <NumberField.Input placeholder="0" />
-                          <NumberField.IncrementButton />
-                        </NumberField.Group>
-                      </NumberField>
-                      <NumberField value={ing.grasas} onChange={(v) => updateIngredient(ing.id, 'grasas', v)} minValue={0} variant="secondary">
-                        <Label>Gras</Label>
-                        <NumberField.Group>
-                          <NumberField.DecrementButton />
-                          <NumberField.Input placeholder="0" />
-                          <NumberField.IncrementButton />
-                        </NumberField.Group>
-                      </NumberField>
-                    </div>
-                  </div>
+                  <IngredientRow
+                    key={ing.id}
+                    ing={ing}
+                    onUpdate={updateIngredient}
+                    onRemove={removeIngredient}
+                  />
                 ))}
               </div>
             )}
