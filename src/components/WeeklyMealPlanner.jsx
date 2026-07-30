@@ -43,7 +43,7 @@ function containerId(day, slot) {
 }
 
 function IngredientRow({ ing, onUpdate, onRemove }) {
-  const { results, loading, search, clear } = useOpenFoodFacts();
+  const { results, loading, error, search, clear } = useOpenFoodFacts();
 
   return (
     <div className="rounded-lg border border-border/20 bg-surface-secondary p-2">
@@ -82,10 +82,22 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
           </ComboBox.InputGroup>
           <ComboBox.Popover>
             <ListBox renderEmptyState={() => (
-              <div className="flex items-center justify-center py-4">
-                <span className="text-xs text-muted">
-                  {loading ? 'Buscando…' : 'Sin resultados'}
-                </span>
+              <div className="flex flex-col items-center justify-center gap-2 py-4 px-2">
+                {loading ? (
+                  <span className="text-xs text-muted">Buscando…</span>
+                ) : error ? (
+                  <>
+                    <span className="text-xs text-danger text-center">{error}</span>
+                    <button
+                      onClick={() => search(ing.nombre)}
+                      className="cursor-pointer text-xs font-medium text-accent hover:underline"
+                    >
+                      Reintentar
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-xs text-muted">Sin resultados</span>
+                )}
               </div>
             )}>
               {results.map((p) => (
