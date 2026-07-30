@@ -263,7 +263,7 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
           <Modal.Header>
             <Modal.Heading>Editar comida</Modal.Heading>
           </Modal.Header>
-          <Modal.Body className="flex flex-col gap-3 overflow-visible">
+          <Modal.Body className="flex flex-col gap-3 overflow-y-auto">
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Nombre</span>
               <input
