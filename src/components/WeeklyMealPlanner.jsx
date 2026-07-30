@@ -93,7 +93,7 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
 
   return (
     <div className="rounded-lg border border-border/20 bg-surface-secondary">
-      <div className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_116px_auto] sm:items-center">
+      <div className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_130px_auto] sm:items-center">
         <div className="flex items-center gap-3 sm:contents">
           {ing.imagen ? (
             <img
@@ -118,11 +118,11 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
           </div>
         </div>
 
-        <div className="hidden min-w-0 sm:block">
+        <div className="hidden min-w-0 overflow-hidden sm:block">
           <p className={`truncate text-sm font-medium ${ing.nombre ? '' : 'italic text-muted'}`}>
             {ing.nombre || 'Nuevo ingrediente'}
           </p>
-          <div className="mt-1 flex flex-wrap gap-1.5">
+          <div className="mt-1 flex flex-nowrap gap-1">
             <Chip size="sm" variant="secondary">
               <Chip.Label>{calories} kcal</Chip.Label>
             </Chip>
@@ -138,19 +138,21 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
           </div>
         </div>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted">Cantidad</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min="1"
-            step="1"
-            value={ing.cantidad ?? 100}
-            onChange={(e) => onUpdate(ing.id, 'cantidad', Math.max(1, Number(e.target.value) || 1))}
-            className="h-9 w-full rounded-md border border-border/40 bg-field px-3 text-sm text-field-foreground outline-none transition-colors focus:border-accent"
-            aria-label={`Cantidad en gramos de ${ing.nombre || 'ingrediente'}`}
-          />
-        </label>
+        <NumberField
+          value={ing.cantidad ?? 100}
+          minValue={1}
+          step={1}
+          onChange={(v) => onUpdate(ing.id, 'cantidad', v)}
+          className="w-full"
+          aria-label={`Cantidad en gramos de ${ing.nombre || 'ingrediente'}`}
+        >
+          <Label className="text-xs font-medium text-muted">Cantidad</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input className="h-9 text-sm" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
 
         <div className="flex items-center justify-end gap-1">
           <button
@@ -339,7 +341,7 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
   const [carbohidratos, setCarbohidratos] = useState(meal.carbohidratos);
   const [grasas, setGrasas] = useState(meal.grasas);
   const [ingredients, setIngredients] = useState(meal.ingredients || []);
-  const [expandedIngredientId, setExpandedIngredientId] = useState(() => meal.ingredients?.[0]?.id || null);
+  const [expandedIngredientId, setExpandedIngredientId] = useState(null);
   const drawerPlacement = useDrawerPlacement();
 
   const calorias = calculateCalories(proteinas, carbohidratos, grasas);
@@ -371,7 +373,7 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
     setCarbohidratos(meal.carbohidratos);
     setGrasas(meal.grasas);
     setIngredients(meal.ingredients || []);
-    setExpandedIngredientId(meal.ingredients?.[0]?.id || null);
+    setExpandedIngredientId(null);
     onClose();
   }
 
