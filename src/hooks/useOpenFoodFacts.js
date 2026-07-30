@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 
 const PRIMARY_URL = 'https://search.openfoodfacts.org/search';
 const FALLBACK_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
-const FIELDS = 'code,product_name,generic_name,brands,nutriments';
+const FIELDS = 'code,product_name,generic_name,brands,nutriments,image_small_url,image_front_small_url';
 const TIMEOUT_MS = 10000;
 const PAGE_SIZE = 15;
 const DEBOUNCE_MS = 500;
@@ -14,6 +14,7 @@ function normalizeProduct(p) {
     product_name:
       p.product_name_es || p.product_name || p.generic_name_es || p.generic_name || 'Producto sin nombre',
     brands: p.brands || '',
+    image_url: p.image_small_url || p.image_front_small_url || null,
     calorias: Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0),
     proteinas: Math.round((n.proteins_100g || n.proteins || 0) * 10) / 10,
     carbohidratos: Math.round((n.carbohydrates_100g || n.carbohydrates || 0) * 10) / 10,

@@ -71,6 +71,7 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
                 onUpdate(ing.id, 'proteinas', p.proteinas);
                 onUpdate(ing.id, 'carbohidratos', p.carbohidratos);
                 onUpdate(ing.id, 'grasas', p.grasas);
+                onUpdate(ing.id, 'imagen', p.image_url || '');
               }
             }
           }}
@@ -102,12 +103,22 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
             )}>
               {results.map((p) => (
                 <ListBox.Item key={p.code} id={p.code} textValue={p.product_name}>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-medium">{p.product_name}</span>
-                    {p.brands && <span className="text-[10px] text-muted">{p.brands}</span>}
-                    <span className="text-[10px] text-muted">
-                      {p.calorias} kcal · P {p.proteinas}g · C {p.carbohidratos}g · G {p.grasas}g
-                    </span>
+                  <div className="flex items-center gap-2">
+                    {p.image_url && (
+                      <img
+                        src={p.image_url}
+                        alt=""
+                        className="size-10 shrink-0 rounded-lg object-cover bg-surface-tertiary"
+                        onError={(e) => { e.target.style.display = 'none' }}
+                      />
+                    )}
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <span className="truncate text-sm font-medium">{p.product_name}</span>
+                      {p.brands && <span className="truncate text-[10px] text-muted">{p.brands}</span>}
+                      <span className="text-[10px] text-muted">
+                        {p.calorias} kcal · P {p.proteinas}g · C {p.carbohidratos}g · G {p.grasas}g
+                      </span>
+                    </div>
                   </div>
                   <ListBox.ItemIndicator />
                 </ListBox.Item>
@@ -115,6 +126,14 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
             </ListBox>
           </ComboBox.Popover>
         </ComboBox>
+        {ing.imagen && (
+          <img
+            src={ing.imagen}
+            alt=""
+            className="size-9 shrink-0 rounded-lg object-cover bg-surface-tertiary"
+            onError={(e) => { e.target.style.display = 'none' }}
+          />
+        )}
         <button
           onClick={() => onRemove(ing.id)}
           className="cursor-pointer rounded-full p-1 text-muted hover:bg-danger/10 hover:text-danger transition-colors shrink-0"
@@ -198,7 +217,7 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
   }
 
   function addIngredient() {
-    setIngredients([...ingredients, { id: 'i_' + Date.now() + Math.random(), nombre: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 }]);
+    setIngredients([...ingredients, { id: 'i_' + Date.now() + Math.random(), nombre: '', imagen: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 }]);
   }
 
   function removeIngredient(id) {
@@ -206,7 +225,7 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
   }
 
   function updateIngredient(id, field, value) {
-    setIngredients(ingredients.map(i => {
+    setIngredients(prev => prev.map(i => {
       if (i.id !== id) return i;
       const updated = { ...i, [field]: value };
       updated.calorias = calculateCalories(updated.proteinas, updated.carbohidratos, updated.grasas);
