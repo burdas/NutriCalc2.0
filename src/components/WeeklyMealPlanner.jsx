@@ -44,10 +44,11 @@ function containerId(day, slot) {
 
 function IngredientRow({ ing, onUpdate, onRemove }) {
   const { results, loading, error, search, clear } = useOpenFoodFacts();
+  const factor = (ing.cantidad || 100) / 100;
 
   return (
     <div className="rounded-lg border border-border/20 bg-surface-secondary p-3">
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center gap-3">
         {ing.imagen && (
           <img
             src={ing.imagen}
@@ -56,84 +57,104 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
             onError={(e) => { e.target.style.display = 'none' }}
           />
         )}
-        <ComboBox
-          allowsCustomValue
-          allowsEmptyCollection
-          menuTrigger="input"
-          defaultFilter={() => true}
-          inputValue={ing.nombre}
-          onInputChange={(value) => {
-            onUpdate(ing.id, 'nombre', value);
-            if (value.length >= 2) {
-              search(value);
-            } else {
-              clear();
-            }
-          }}
-          onSelectionChange={(key) => {
-            if (key) {
-              const p = results.find(r => r.code === key);
-              if (p) {
-                onUpdate(ing.id, 'nombre', p.product_name);
-                onUpdate(ing.id, 'calorias', p.calorias);
-                onUpdate(ing.id, 'proteinas', p.proteinas);
-                onUpdate(ing.id, 'carbohidratos', p.carbohidratos);
-                onUpdate(ing.id, 'grasas', p.grasas);
-                onUpdate(ing.id, 'imagen', p.image_url || '');
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
+          <ComboBox
+            allowsCustomValue
+            allowsEmptyCollection
+            menuTrigger="input"
+            defaultFilter={() => true}
+            inputValue={ing.nombre}
+            onInputChange={(value) => {
+              onUpdate(ing.id, 'nombre', value);
+              if (value.length >= 2) {
+                search(value);
+              } else {
+                clear();
               }
-            }
-          }}
-          className="flex-1"
-        >
-          <ComboBox.InputGroup>
-            <Input placeholder="Buscar alimento..." />
-            <ComboBox.Trigger />
-          </ComboBox.InputGroup>
-          <ComboBox.Popover>
-            <ListBox renderEmptyState={() => (
-              <div className="flex flex-col items-center justify-center gap-2 py-4 px-2">
-                {loading ? (
-                  <span className="text-xs text-muted">Buscando…</span>
-                ) : error ? (
-                  <>
-                    <span className="text-xs text-danger text-center">{error}</span>
-                    <button
-                      onClick={() => search(ing.nombre)}
-                      className="cursor-pointer text-xs font-medium text-accent hover:underline"
-                    >
-                      Reintentar
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-xs text-muted">Sin resultados</span>
-                )}
-              </div>
-            )}>
-              {results.map((p) => (
-                <ListBox.Item key={p.code} id={p.code} textValue={p.product_name}>
-                  <div className="flex items-center gap-2">
-                    {p.image_url && (
-                      <img
-                        src={p.image_url}
-                        alt=""
-                        className="size-10 shrink-0 rounded-lg object-cover bg-surface-tertiary"
-                        onError={(e) => { e.target.style.display = 'none' }}
-                      />
-                    )}
-                    <div className="flex min-w-0 flex-col gap-0.5">
-                      <span className="truncate text-sm font-medium">{p.product_name}</span>
-                      {p.brands && <span className="truncate text-[10px] text-muted">{p.brands}</span>}
-                      <span className="text-[10px] text-muted">
-                        {p.calorias} kcal · P {p.proteinas}g · C {p.carbohidratos}g · G {p.grasas}g
-                      </span>
+            }}
+            onSelectionChange={(key) => {
+              if (key) {
+                const p = results.find(r => r.code === key);
+                if (p) {
+                  onUpdate(ing.id, 'nombre', p.product_name);
+                  onUpdate(ing.id, 'calorias', p.calorias);
+                  onUpdate(ing.id, 'proteinas', p.proteinas);
+                  onUpdate(ing.id, 'carbohidratos', p.carbohidratos);
+                  onUpdate(ing.id, 'grasas', p.grasas);
+                  onUpdate(ing.id, 'imagen', p.image_url || '');
+                }
+              }
+            }}
+            className="w-full"
+          >
+            <ComboBox.InputGroup>
+              <Input placeholder="Buscar alimento..." />
+              <ComboBox.Trigger />
+            </ComboBox.InputGroup>
+            <ComboBox.Popover>
+              <ListBox renderEmptyState={() => (
+                <div className="flex flex-col items-center justify-center gap-2 py-4 px-2">
+                  {loading ? (
+                    <span className="text-xs text-muted">Buscando…</span>
+                  ) : error ? (
+                    <>
+                      <span className="text-xs text-danger text-center">{error}</span>
+                      <button
+                        onClick={() => search(ing.nombre)}
+                        className="cursor-pointer text-xs font-medium text-accent hover:underline"
+                      >
+                        Reintentar
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted">Sin resultados</span>
+                  )}
+                </div>
+              )}>
+                {results.map((p) => (
+                  <ListBox.Item key={p.code} id={p.code} textValue={p.product_name}>
+                    <div className="flex items-center gap-2">
+                      {p.image_url && (
+                        <img
+                          src={p.image_url}
+                          alt=""
+                          className="size-10 shrink-0 rounded-lg object-cover bg-surface-tertiary"
+                          onError={(e) => { e.target.style.display = 'none' }}
+                        />
+                      )}
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="truncate text-sm font-medium">{p.product_name}</span>
+                        {p.brands && <span className="truncate text-[10px] text-muted">{p.brands}</span>}
+                        <span className="text-[10px] text-muted">
+                          {p.calorias} kcal · P {p.proteinas}g · C {p.carbohidratos}g · G {p.grasas}g
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              ))}
-            </ListBox>
-          </ComboBox.Popover>
-        </ComboBox>
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </ComboBox.Popover>
+          </ComboBox>
+          <div className="flex items-center gap-1.5">
+            <NumberField
+              value={ing.cantidad ?? 100}
+              onChange={(v) => onUpdate(ing.id, 'cantidad', v < 1 ? 1 : v)}
+              minValue={1}
+              step={1}
+              variant="secondary"
+              aria-label="Gramos"
+              className="flex-1"
+            >
+              <NumberField.Group>
+                <NumberField.DecrementButton />
+                <NumberField.Input placeholder="100" />
+                <NumberField.IncrementButton />
+              </NumberField.Group>
+            </NumberField>
+            <span className="text-xs font-medium text-muted">g</span>
+          </div>
+        </div>
         <button
           onClick={() => onRemove(ing.id)}
           className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-danger/10 hover:text-danger transition-colors shrink-0"
@@ -145,11 +166,11 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
         <div className="flex flex-col gap-1">
           <Label>Cal</Label>
           <div className="flex h-9 items-center gap-1 rounded-xl border border-border/20 bg-surface-tertiary px-3">
-            <span className="text-sm font-bold tabular-nums leading-none">{ing.calorias}</span>
+            <span className="text-sm font-bold tabular-nums leading-none">{Math.round((ing.calorias || 0) * factor)}</span>
             <span className="text-[10px] font-medium text-muted">kcal</span>
           </div>
         </div>
-        <NumberField value={ing.proteinas} onChange={(v) => onUpdate(ing.id, 'proteinas', v)} minValue={0} variant="secondary">
+        <NumberField value={Math.round((ing.proteinas || 0) * factor * 10) / 10} onChange={(v) => onUpdate(ing.id, 'proteinas', factor > 0 ? v / factor : 0)} minValue={0} variant="secondary">
           <Label>Prot</Label>
           <NumberField.Group>
             <NumberField.DecrementButton />
@@ -157,7 +178,7 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
             <NumberField.IncrementButton />
           </NumberField.Group>
         </NumberField>
-        <NumberField value={ing.carbohidratos} onChange={(v) => onUpdate(ing.id, 'carbohidratos', v)} minValue={0} variant="secondary">
+        <NumberField value={Math.round((ing.carbohidratos || 0) * factor * 10) / 10} onChange={(v) => onUpdate(ing.id, 'carbohidratos', factor > 0 ? v / factor : 0)} minValue={0} variant="secondary">
           <Label>Carb</Label>
           <NumberField.Group>
             <NumberField.DecrementButton />
@@ -165,7 +186,7 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
             <NumberField.IncrementButton />
           </NumberField.Group>
         </NumberField>
-        <NumberField value={ing.grasas} onChange={(v) => onUpdate(ing.id, 'grasas', v)} minValue={0} variant="secondary">
+        <NumberField value={Math.round((ing.grasas || 0) * factor * 10) / 10} onChange={(v) => onUpdate(ing.id, 'grasas', factor > 0 ? v / factor : 0)} minValue={0} variant="secondary">
           <Label>Gras</Label>
           <NumberField.Group>
             <NumberField.DecrementButton />
@@ -191,9 +212,10 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
     if (ingredients.length > 0) {
       let prot = 0, carb = 0, gras = 0;
       for (const ing of ingredients) {
-        prot += ing.proteinas || 0;
-        carb += ing.carbohidratos || 0;
-        gras += ing.grasas || 0;
+        const factor = (ing.cantidad || 100) / 100;
+        prot += (ing.proteinas || 0) * factor;
+        carb += (ing.carbohidratos || 0) * factor;
+        gras += (ing.grasas || 0) * factor;
       }
       setProteinas(prot);
       setCarbohidratos(carb);
@@ -217,7 +239,7 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
   }
 
   function addIngredient() {
-    setIngredients([...ingredients, { id: 'i_' + Date.now() + Math.random(), nombre: '', imagen: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 }]);
+    setIngredients([...ingredients, { id: 'i_' + Date.now() + Math.random(), nombre: '', imagen: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0, cantidad: 100 }]);
   }
 
   function removeIngredient(id) {
