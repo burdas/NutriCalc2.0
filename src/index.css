@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+@source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 
 html {
   transition: color-scheme 0.3s ease;
@@ -7,12 +8,6 @@ html {
 
 html.dark {
   color-scheme: dark;
-}
-
-*, *::before, *::after {
-  transition-property: background-color, color, border-color, box-shadow;
-  transition-duration: 0.3s;
-  transition-timing-function: ease;
 }
 
 @keyframes fadeInUp {
