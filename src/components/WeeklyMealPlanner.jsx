@@ -46,8 +46,16 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
   const { results, loading, error, search, clear } = useOpenFoodFacts();
 
   return (
-    <div className="rounded-lg border border-border/20 bg-surface-secondary p-2">
-      <div className="mb-1.5 flex items-center justify-between gap-1">
+    <div className="rounded-lg border border-border/20 bg-surface-secondary p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        {ing.imagen && (
+          <img
+            src={ing.imagen}
+            alt=""
+            className="size-12 shrink-0 rounded-xl object-cover bg-surface-tertiary"
+            onError={(e) => { e.target.style.display = 'none' }}
+          />
+        )}
         <ComboBox
           allowsCustomValue
           allowsEmptyCollection
@@ -126,19 +134,11 @@ function IngredientRow({ ing, onUpdate, onRemove }) {
             </ListBox>
           </ComboBox.Popover>
         </ComboBox>
-        {ing.imagen && (
-          <img
-            src={ing.imagen}
-            alt=""
-            className="size-9 shrink-0 rounded-lg object-cover bg-surface-tertiary"
-            onError={(e) => { e.target.style.display = 'none' }}
-          />
-        )}
         <button
           onClick={() => onRemove(ing.id)}
-          className="cursor-pointer rounded-full p-1 text-muted hover:bg-danger/10 hover:text-danger transition-colors shrink-0"
+          className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-danger/10 hover:text-danger transition-colors shrink-0"
         >
-          <X className="size-3" />
+          <X className="size-4" />
         </button>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -235,7 +235,7 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
 
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Modal.Container size="sm">
+      <Modal.Container size="lg">
         <Modal.Dialog>
           <Modal.CloseTrigger />
           <Modal.Header>
