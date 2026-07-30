@@ -146,7 +146,7 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
           className="w-full"
           aria-label={`Cantidad en gramos de ${ing.nombre || 'ingrediente'}`}
         >
-          <Label className="text-xs font-medium text-muted">Cantidad</Label>
+          <Label className="text-xs font-medium text-muted">Cantidad (g)</Label>
           <NumberField.Group>
             <NumberField.DecrementButton />
             <NumberField.Input className="h-9 text-sm" />
