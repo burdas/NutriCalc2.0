@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, RadioGroup, Radio, Modal, Button, NumberField, Label, ComboBox, Input, ListBox } from '@heroui/react';
+import { Card, RadioGroup, Radio, Drawer, Button, NumberField, Label, ComboBox, Input, ListBox, TextField, Chip } from '@heroui/react';
 import { calculateCalories } from '../utils/calculations';
 import {
   DndContext,
@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, X, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil } from 'lucide-react';
 import { useOpenFoodFacts } from '../hooks/useOpenFoodFacts';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -42,169 +42,305 @@ function containerId(day, slot) {
   return `${day}::${slot}`;
 }
 
-function IngredientRow({ ing, onUpdate, onRemove }) {
-  const { results, loading, error, search, clear } = useOpenFoodFacts();
-  const factor = (ing.cantidad || 100) / 100;
-
+function MacroMetric({ label, value, unit, emphasis = false }) {
   return (
-    <div className="rounded-lg border border-border/20 bg-surface-secondary p-3">
-      <div className="mb-3 flex items-center gap-3">
-        {ing.imagen && (
-          <img
-            src={ing.imagen}
-            alt=""
-            className="size-12 shrink-0 rounded-xl object-cover bg-surface-tertiary"
-            onError={(e) => { e.target.style.display = 'none' }}
-          />
-        )}
-        <div className="flex flex-col gap-2 flex-1 min-w-0">
-          <ComboBox
-            allowsCustomValue
-            allowsEmptyCollection
-            menuTrigger="input"
-            defaultFilter={() => true}
-            inputValue={ing.nombre}
-            onInputChange={(value) => {
-              onUpdate(ing.id, 'nombre', value);
-              if (value.length >= 2) {
-                search(value);
-              } else {
-                clear();
-              }
-            }}
-            onSelectionChange={(key) => {
-              if (key) {
-                const p = results.find(r => r.code === key);
-                if (p) {
-                  onUpdate(ing.id, 'nombre', p.product_name);
-                  onUpdate(ing.id, 'calorias', p.calorias);
-                  onUpdate(ing.id, 'proteinas', p.proteinas);
-                  onUpdate(ing.id, 'carbohidratos', p.carbohidratos);
-                  onUpdate(ing.id, 'grasas', p.grasas);
-                  onUpdate(ing.id, 'imagen', p.image_url || '');
-                }
-              }
-            }}
-            className="w-full"
-          >
-            <ComboBox.InputGroup>
-              <Input placeholder="Buscar alimento..." />
-              <ComboBox.Trigger />
-            </ComboBox.InputGroup>
-            <ComboBox.Popover>
-              <ListBox renderEmptyState={() => (
-                <div className="flex flex-col items-center justify-center gap-2 py-4 px-2">
-                  {loading ? (
-                    <span className="text-xs text-muted">Buscando…</span>
-                  ) : error ? (
-                    <>
-                      <span className="text-xs text-danger text-center">{error}</span>
-                      <button
-                        onClick={() => search(ing.nombre)}
-                        className="cursor-pointer text-xs font-medium text-accent hover:underline"
-                      >
-                        Reintentar
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-xs text-muted">Sin resultados</span>
-                  )}
-                </div>
-              )}>
-                {results.map((p) => (
-                  <ListBox.Item key={p.code} id={p.code} textValue={p.product_name}>
-                    <div className="flex items-center gap-2">
-                      {p.image_url && (
-                        <img
-                          src={p.image_url}
-                          alt=""
-                          className="size-10 shrink-0 rounded-lg object-cover bg-surface-tertiary"
-                          onError={(e) => { e.target.style.display = 'none' }}
-                        />
-                      )}
-                      <div className="flex min-w-0 flex-col gap-0.5">
-                        <span className="truncate text-sm font-medium">{p.product_name}</span>
-                        {p.brands && <span className="truncate text-[10px] text-muted">{p.brands}</span>}
-                        <span className="text-[10px] text-muted">
-                          {p.calorias} kcal · P {p.proteinas}g · C {p.carbohidratos}g · G {p.grasas}g
-                        </span>
-                      </div>
-                    </div>
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                ))}
-              </ListBox>
-            </ComboBox.Popover>
-          </ComboBox>
-          <div className="flex items-center gap-1.5">
-            <NumberField
-              value={ing.cantidad ?? 100}
-              onChange={(v) => onUpdate(ing.id, 'cantidad', v < 1 ? 1 : v)}
-              minValue={1}
-              step={1}
-              variant="secondary"
-              aria-label="Gramos"
-              className="flex-1"
-            >
-              <NumberField.Group>
-                <NumberField.DecrementButton />
-                <NumberField.Input placeholder="100" />
-                <NumberField.IncrementButton />
-              </NumberField.Group>
-            </NumberField>
-            <span className="text-xs font-medium text-muted">g</span>
-          </div>
-        </div>
-        <button
-          onClick={() => onRemove(ing.id)}
-          className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-danger/10 hover:text-danger transition-colors shrink-0"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1">
-          <Label>Cal</Label>
-          <div className="flex h-9 items-center gap-1 rounded-xl border border-border/20 bg-surface-tertiary px-3">
-            <span className="text-sm font-bold tabular-nums leading-none">{Math.round((ing.calorias || 0) * factor)}</span>
-            <span className="text-[10px] font-medium text-muted">kcal</span>
-          </div>
-        </div>
-        <NumberField value={Math.round((ing.proteinas || 0) * factor * 10) / 10} onChange={(v) => onUpdate(ing.id, 'proteinas', factor > 0 ? v / factor : 0)} minValue={0} variant="secondary">
-          <Label>Prot</Label>
-          <NumberField.Group>
-            <NumberField.DecrementButton />
-            <NumberField.Input placeholder="0" />
-            <NumberField.IncrementButton />
-          </NumberField.Group>
-        </NumberField>
-        <NumberField value={Math.round((ing.carbohidratos || 0) * factor * 10) / 10} onChange={(v) => onUpdate(ing.id, 'carbohidratos', factor > 0 ? v / factor : 0)} minValue={0} variant="secondary">
-          <Label>Carb</Label>
-          <NumberField.Group>
-            <NumberField.DecrementButton />
-            <NumberField.Input placeholder="0" />
-            <NumberField.IncrementButton />
-          </NumberField.Group>
-        </NumberField>
-        <NumberField value={Math.round((ing.grasas || 0) * factor * 10) / 10} onChange={(v) => onUpdate(ing.id, 'grasas', factor > 0 ? v / factor : 0)} minValue={0} variant="secondary">
-          <Label>Gras</Label>
-          <NumberField.Group>
-            <NumberField.DecrementButton />
-            <NumberField.Input placeholder="0" />
-            <NumberField.IncrementButton />
-          </NumberField.Group>
-        </NumberField>
+    <div className={`rounded-lg border border-border/20 px-3 py-2 ${emphasis ? 'bg-accent/10' : 'bg-surface-secondary'}`}>
+      <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">{label}</span>
+      <div className="mt-1 flex items-baseline gap-1">
+        <span className="text-lg font-bold tabular-nums leading-none">{value}</span>
+        <span className="text-xs font-medium text-muted">{unit}</span>
       </div>
     </div>
   );
 }
 
-function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen, onClose }) {
+function SectionHeader({ title, description }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      {description ? <p className="text-xs text-muted">{description}</p> : null}
+    </div>
+  );
+}
+
+function useDrawerPlacement() {
+  const [placement, setPlacement] = useState(() => {
+    if (typeof window === 'undefined') return 'right';
+    return window.matchMedia('(max-width: 639px)').matches ? 'bottom' : 'right';
+  });
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 639px)');
+    const updatePlacement = () => setPlacement(media.matches ? 'bottom' : 'right');
+
+    updatePlacement();
+    media.addEventListener('change', updatePlacement);
+    return () => media.removeEventListener('change', updatePlacement);
+  }, []);
+
+  return placement;
+}
+
+function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
+  const { results, loading, error, search, clear } = useOpenFoodFacts();
+  const isFoundFood = Boolean(ing.productCode || ing.imagen);
+  const factor = (ing.cantidad || 100) / 100;
+  const baseCalories = ing.calorias || 0;
+  const calories = Math.round((ing.calorias || 0) * factor);
+  const protein = Math.round((ing.proteinas || 0) * factor * 10) / 10;
+  const carbs = Math.round((ing.carbohidratos || 0) * factor * 10) / 10;
+  const fat = Math.round((ing.grasas || 0) * factor * 10) / 10;
+
+  return (
+    <div className="rounded-lg border border-border/20 bg-surface-secondary">
+      <div className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_116px_auto] sm:items-center">
+        <div className="flex items-center gap-3 sm:contents">
+          {ing.imagen ? (
+            <img
+              src={ing.imagen}
+              alt=""
+              className="size-12 shrink-0 rounded-lg bg-surface-tertiary object-cover"
+              onError={(e) => { e.target.style.display = 'none' }}
+            />
+          ) : (
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-surface-tertiary text-xs font-semibold text-muted">
+              {ing.nombre ? ing.nombre.trim().slice(0, 1).toUpperCase() : '+'}
+            </div>
+          )}
+
+          <div className="min-w-0 flex-1 sm:hidden">
+            <p className={`truncate text-sm font-medium ${ing.nombre ? '' : 'italic text-muted'}`}>
+              {ing.nombre || 'Nuevo ingrediente'}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              {calories} kcal · P {protein}g · C {carbs}g · G {fat}g
+            </p>
+          </div>
+        </div>
+
+        <div className="hidden min-w-0 sm:block">
+          <p className={`truncate text-sm font-medium ${ing.nombre ? '' : 'italic text-muted'}`}>
+            {ing.nombre || 'Nuevo ingrediente'}
+          </p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            <Chip size="sm" variant="secondary">
+              <Chip.Label>{calories} kcal</Chip.Label>
+            </Chip>
+            <Chip size="sm" variant="secondary">
+              <Chip.Label>P {protein}g</Chip.Label>
+            </Chip>
+            <Chip size="sm" variant="secondary">
+              <Chip.Label>C {carbs}g</Chip.Label>
+            </Chip>
+            <Chip size="sm" variant="secondary">
+              <Chip.Label>G {fat}g</Chip.Label>
+            </Chip>
+          </div>
+        </div>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-muted">Cantidad</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min="1"
+            step="1"
+            value={ing.cantidad ?? 100}
+            onChange={(e) => onUpdate(ing.id, 'cantidad', Math.max(1, Number(e.target.value) || 1))}
+            className="h-9 w-full rounded-md border border-border/40 bg-field px-3 text-sm text-field-foreground outline-none transition-colors focus:border-accent"
+            aria-label={`Cantidad en gramos de ${ing.nombre || 'ingrediente'}`}
+          />
+        </label>
+
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={onToggle}
+            className="cursor-pointer rounded-full p-2 text-muted transition-colors hover:bg-accent/10 hover:text-accent"
+            aria-label={isExpanded ? 'Ocultar detalles del ingrediente' : 'Editar detalles del ingrediente'}
+            aria-expanded={isExpanded}
+          >
+            {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => onRemove(ing.id)}
+            className="cursor-pointer rounded-full p-2 text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+            aria-label="Eliminar ingrediente"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      </div>
+
+      {isExpanded ? (
+        <div className="border-t border-border/20 p-3 pt-4">
+          <div className="grid gap-3">
+            <ComboBox
+              allowsCustomValue
+              allowsEmptyCollection
+              menuTrigger="input"
+              defaultFilter={() => true}
+              inputValue={ing.nombre}
+              onInputChange={(value) => {
+                onUpdate(ing.id, 'nombre', value);
+                if (value !== ing.nombre && isFoundFood) {
+                  onUpdate(ing.id, 'productCode', '');
+                  onUpdate(ing.id, 'imagen', '');
+                }
+                if (value.length >= 2) {
+                  search(value);
+                } else {
+                  clear();
+                }
+              }}
+              onSelectionChange={(key) => {
+                if (key) {
+                  const p = results.find(r => r.code === key);
+                  if (p) {
+                    onUpdate(ing.id, 'nombre', p.product_name);
+                    onUpdate(ing.id, 'calorias', p.calorias);
+                    onUpdate(ing.id, 'proteinas', p.proteinas);
+                    onUpdate(ing.id, 'carbohidratos', p.carbohidratos);
+                    onUpdate(ing.id, 'grasas', p.grasas);
+                    onUpdate(ing.id, 'imagen', p.image_url || '');
+                    onUpdate(ing.id, 'productCode', p.code);
+                  }
+                }
+              }}
+              className="w-full"
+            >
+              <Label>Alimento</Label>
+              <ComboBox.InputGroup>
+                <Input placeholder="Buscar alimento..." />
+                <ComboBox.Trigger />
+              </ComboBox.InputGroup>
+              <ComboBox.Popover>
+                <ListBox renderEmptyState={() => (
+                  <div className="flex flex-col items-center justify-center gap-2 px-2 py-4">
+                    {loading ? (
+                      <span className="text-xs text-muted">Buscando...</span>
+                    ) : error ? (
+                      <>
+                        <span className="text-center text-xs text-danger">{error}</span>
+                        <button
+                          type="button"
+                          onClick={() => search(ing.nombre)}
+                          className="cursor-pointer text-xs font-medium text-accent hover:underline"
+                        >
+                          Reintentar
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted">Sin resultados</span>
+                    )}
+                  </div>
+                )}>
+                  {results.map((p) => (
+                    <ListBox.Item key={p.code} id={p.code} textValue={p.product_name}>
+                      <div className="flex items-center gap-2">
+                        {p.image_url && (
+                          <img
+                            src={p.image_url}
+                            alt=""
+                            className="size-10 shrink-0 rounded-lg bg-surface-tertiary object-cover"
+                            onError={(e) => { e.target.style.display = 'none' }}
+                          />
+                        )}
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="truncate text-sm font-medium">{p.product_name}</span>
+                          {p.brands && <span className="truncate text-[10px] text-muted">{p.brands}</span>}
+                          <span className="text-[10px] text-muted">
+                            {p.calorias} kcal · P {p.proteinas}g · C {p.carbohidratos}g · G {p.grasas}g
+                          </span>
+                        </div>
+                      </div>
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </ComboBox.Popover>
+            </ComboBox>
+
+            <div className="rounded-lg border border-border/20 bg-surface-tertiary p-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Macros por 100 g</span>
+                <span className="text-xs font-semibold tabular-nums text-muted">{baseCalories} kcal</span>
+              </div>
+              {isFoundFood ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-md bg-surface-secondary px-2 py-2">
+                    <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Proteínas</span>
+                    <span className="text-sm font-semibold tabular-nums">{ing.proteinas || 0}g</span>
+                  </div>
+                  <div className="rounded-md bg-surface-secondary px-2 py-2">
+                    <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Carbos</span>
+                    <span className="text-sm font-semibold tabular-nums">{ing.carbohidratos || 0}g</span>
+                  </div>
+                  <div className="rounded-md bg-surface-secondary px-2 py-2">
+                    <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Grasas</span>
+                    <span className="text-sm font-semibold tabular-nums">{ing.grasas || 0}g</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <NumberField
+                    value={ing.proteinas || 0}
+                    onChange={(v) => onUpdate(ing.id, 'proteinas', v ?? 0)}
+                    minValue={0}
+                    variant="secondary"
+                  >
+                    <Label>Proteínas</Label>
+                    <NumberField.Group>
+                      <NumberField.DecrementButton />
+                      <NumberField.Input placeholder="0" />
+                      <NumberField.IncrementButton />
+                    </NumberField.Group>
+                  </NumberField>
+                  <NumberField
+                    value={ing.carbohidratos || 0}
+                    onChange={(v) => onUpdate(ing.id, 'carbohidratos', v ?? 0)}
+                    minValue={0}
+                    variant="secondary"
+                  >
+                    <Label>Carbohidratos</Label>
+                    <NumberField.Group>
+                      <NumberField.DecrementButton />
+                      <NumberField.Input placeholder="0" />
+                      <NumberField.IncrementButton />
+                    </NumberField.Group>
+                  </NumberField>
+                  <NumberField
+                    value={ing.grasas || 0}
+                    onChange={(v) => onUpdate(ing.id, 'grasas', v ?? 0)}
+                    minValue={0}
+                    variant="secondary"
+                  >
+                    <Label>Grasas</Label>
+                    <NumberField.Group>
+                      <NumberField.DecrementButton />
+                      <NumberField.Input placeholder="0" />
+                      <NumberField.IncrementButton />
+                    </NumberField.Group>
+                  </NumberField>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen, onClose }) {
   const [nombre, setNombre] = useState(meal.nombre);
   const [proteinas, setProteinas] = useState(meal.proteinas);
   const [carbohidratos, setCarbohidratos] = useState(meal.carbohidratos);
   const [grasas, setGrasas] = useState(meal.grasas);
   const [ingredients, setIngredients] = useState(meal.ingredients || []);
+  const [expandedIngredientId, setExpandedIngredientId] = useState(() => meal.ingredients?.[0]?.id || null);
+  const drawerPlacement = useDrawerPlacement();
 
   const calorias = calculateCalories(proteinas, carbohidratos, grasas);
 
@@ -235,15 +371,21 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
     setCarbohidratos(meal.carbohidratos);
     setGrasas(meal.grasas);
     setIngredients(meal.ingredients || []);
+    setExpandedIngredientId(meal.ingredients?.[0]?.id || null);
     onClose();
   }
 
   function addIngredient() {
-    setIngredients([...ingredients, { id: 'i_' + Date.now() + Math.random(), nombre: '', imagen: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0, cantidad: 100 }]);
+    const id = 'i_' + Date.now() + Math.random();
+    setIngredients([...ingredients, { id, nombre: '', imagen: '', calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0, cantidad: 100 }]);
+    setExpandedIngredientId(id);
   }
 
   function removeIngredient(id) {
     setIngredients(ingredients.filter(i => i.id !== id));
+    if (expandedIngredientId === id) {
+      setExpandedIngredientId(null);
+    }
   }
 
   function updateIngredient(id, field, value) {
@@ -256,95 +398,125 @@ function EditModal({ meal, day, slot, onUpdateBulk, onUpdateIngredients, isOpen,
   }
 
   return (
-    <Modal.Backdrop isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <Modal.Container size="lg">
-        <Modal.Dialog>
-          <Modal.CloseTrigger />
-          <Modal.Header>
-            <Modal.Heading>Editar comida</Modal.Heading>
-          </Modal.Header>
-          <Modal.Body className="flex flex-col gap-3 overflow-y-auto">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Nombre</span>
-              <input
-                type="text"
-                placeholder="¿Qué comiste?"
+    <Drawer.Backdrop isOpen={isOpen} onOpenChange={(open) => { if (!open) handleCancel(); }}>
+      <Drawer.Content placement={drawerPlacement}>
+        <Drawer.Dialog className="max-h-[100dvh] sm:w-[min(560px,calc(100vw-2rem))]">
+          <Drawer.CloseTrigger />
+          <Drawer.Handle className="sm:hidden" />
+          <Drawer.Header className="border-b border-border/20">
+            <div className="flex flex-col gap-1 pr-8">
+              <Drawer.Heading>Editar comida</Drawer.Heading>
+              <p className="text-xs capitalize text-muted">
+                {day} · {SLOT_LABELS[slot]}
+              </p>
+            </div>
+          </Drawer.Header>
+          <Drawer.Body className="flex flex-col gap-5 overflow-y-auto">
+            <section className="flex flex-col gap-3">
+              <TextField
                 value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="w-full rounded-md border border-border/40 bg-field px-3 py-2 text-sm text-field-foreground placeholder:text-muted/50 outline-none transition-colors focus:border-accent"
+                onChange={setNombre}
+                variant="secondary"
+                fullWidth
+              >
+                <Label>Nombre</Label>
+                <Input placeholder="¿Qué comiste?" />
+              </TextField>
+            </section>
+
+            <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <MacroMetric label="Calorías" value={calorias} unit="kcal" emphasis />
+              <MacroMetric label="Proteínas" value={Math.round(proteinas * 10) / 10} unit="g" />
+              <MacroMetric label="Carbos" value={Math.round(carbohidratos * 10) / 10} unit="g" />
+              <MacroMetric label="Grasas" value={Math.round(grasas * 10) / 10} unit="g" />
+            </section>
+
+            <section className={`flex flex-col gap-3 ${ingredients.length > 0 ? 'opacity-70' : ''}`}>
+              <SectionHeader
+                title="Macros"
+                description={ingredients.length > 0 ? 'Calculados automáticamente desde los ingredientes.' : 'Introduce los macros totales de la comida.'}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <Label>Calorías</Label>
-                <div className="flex h-9 items-center gap-1.5 rounded-xl border border-border/20 bg-surface-secondary px-4">
-                  <span className="text-lg font-bold tabular-nums leading-none">{calorias}</span>
-                  <span className="text-xs font-medium text-muted">kcal</span>
-                </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <NumberField value={proteinas} onChange={setProteinas} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+                  <Label>Proteínas</Label>
+                  <NumberField.Group>
+                    <NumberField.DecrementButton />
+                    <NumberField.Input placeholder="0" />
+                    <NumberField.IncrementButton />
+                  </NumberField.Group>
+                </NumberField>
+                <NumberField value={carbohidratos} onChange={setCarbohidratos} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+                  <Label>Carbohidratos</Label>
+                  <NumberField.Group>
+                    <NumberField.DecrementButton />
+                    <NumberField.Input placeholder="0" />
+                    <NumberField.IncrementButton />
+                  </NumberField.Group>
+                </NumberField>
+                <NumberField value={grasas} onChange={setGrasas} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
+                  <Label>Grasas</Label>
+                  <NumberField.Group>
+                    <NumberField.DecrementButton />
+                    <NumberField.Input placeholder="0" />
+                    <NumberField.IncrementButton />
+                  </NumberField.Group>
+                </NumberField>
               </div>
-              <NumberField value={proteinas} onChange={setProteinas} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
-                <Label>Proteínas</Label>
-                <NumberField.Group>
-                  <NumberField.DecrementButton />
-                  <NumberField.Input placeholder="0" />
-                  <NumberField.IncrementButton />
-                </NumberField.Group>
-              </NumberField>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <NumberField value={carbohidratos} onChange={setCarbohidratos} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
-                <Label>Carbohidratos</Label>
-                <NumberField.Group>
-                  <NumberField.DecrementButton />
-                  <NumberField.Input placeholder="0" />
-                  <NumberField.IncrementButton />
-                </NumberField.Group>
-              </NumberField>
-              <NumberField value={grasas} onChange={setGrasas} minValue={0} isDisabled={ingredients.length > 0} variant="secondary">
-                <Label>Grasas</Label>
-                <NumberField.Group>
-                  <NumberField.DecrementButton />
-                  <NumberField.Input placeholder="0" />
-                  <NumberField.IncrementButton />
-                </NumberField.Group>
-              </NumberField>
-            </div>
+            </section>
 
-            {ingredients.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Ingredientes</span>
-                </div>
-                {ingredients.map((ing) => (
-                  <IngredientRow
-                    key={ing.id}
-                    ing={ing}
-                    onUpdate={updateIngredient}
-                    onRemove={removeIngredient}
-                  />
-                ))}
+            <section className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <SectionHeader
+                  title="Ingredientes"
+                  description="Busca un alimento o escríbelo manualmente con sus macros."
+                />
+                {ingredients.length > 0 ? (
+                  <Chip size="sm" variant="secondary">
+                    <Chip.Label>{ingredients.length}</Chip.Label>
+                  </Chip>
+                ) : null}
               </div>
-            )}
 
-            <button
-              onClick={addIngredient}
-              className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border-2 border-dashed border-border/40 px-3 py-2 text-xs text-muted transition-colors hover:border-accent/40 hover:text-accent"
-            >
-              <Plus className="size-3.5" />
-              Añadir ingrediente
-            </button>
-          </Modal.Body>
-          <Modal.Footer className="flex justify-end gap-2">
+              {ingredients.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {ingredients.map((ing) => (
+                    <IngredientRow
+                      key={ing.id}
+                      ing={ing}
+                      isExpanded={expandedIngredientId === ing.id}
+                      onToggle={() => setExpandedIngredientId(expandedIngredientId === ing.id ? null : ing.id)}
+                      onUpdate={updateIngredient}
+                      onRemove={removeIngredient}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border/40 bg-surface-secondary px-4 py-5 text-center">
+                  <p className="text-sm font-medium">Sin ingredientes</p>
+                  <p className="mt-1 text-xs text-muted">Puedes guardar macros manuales o construir la comida por ingredientes.</p>
+                </div>
+              )}
+
+              <button
+                onClick={addIngredient}
+                className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border-2 border-dashed border-border/40 px-3 py-2 text-xs text-muted transition-colors hover:border-accent/40 hover:text-accent"
+              >
+                <Plus className="size-3.5" />
+                Añadir ingrediente
+              </button>
+            </section>
+          </Drawer.Body>
+          <Drawer.Footer className="sticky bottom-0 flex justify-end gap-2 border-t border-border/20 bg-content1">
             <Button variant="tertiary" size="sm" onPress={handleCancel}>
               Cancelar
             </Button>
             <Button variant="primary" size="sm" onPress={handleSave}>
               Guardar
             </Button>
-          </Modal.Footer>
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+          </Drawer.Footer>
+        </Drawer.Dialog>
+      </Drawer.Content>
+    </Drawer.Backdrop>
   );
 }
 
@@ -418,7 +590,7 @@ function SortableMealCard({ meal, day, slot, onRemove, onUpdateBulk, onUpdateIng
           </div>
         </div>
       </div>
-      <EditModal
+      <MealEditorDrawer
         meal={meal}
         day={day}
         slot={slot}
