@@ -91,6 +91,23 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
   const carbs = Math.round((ing.carbohidratos || 0) * factor * 10) / 10;
   const fat = Math.round((ing.grasas || 0) * factor * 10) / 10;
 
+  const macroChips = (
+    <div className="mt-1 flex flex-wrap gap-1 sm:flex-nowrap">
+      <Chip size="sm" className="bg-surface text-foreground ring-1 ring-border/40 px-2 py-1">
+        <Chip.Label>{calories} kcal</Chip.Label>
+      </Chip>
+      <Chip size="sm" className="bg-surface text-foreground ring-1 ring-border/40 px-2 py-1">
+        <Chip.Label>P {protein}g</Chip.Label>
+      </Chip>
+      <Chip size="sm" className="bg-surface text-foreground ring-1 ring-border/40 px-2 py-1">
+        <Chip.Label>C {carbs}g</Chip.Label>
+      </Chip>
+      <Chip size="sm" className="bg-surface text-foreground ring-1 ring-border/40 px-2 py-1">
+        <Chip.Label>G {fat}g</Chip.Label>
+      </Chip>
+    </div>
+  );
+
   return (
     <div className="rounded-lg border border-border/20 bg-surface-secondary">
       <div className="grid gap-3 p-3 sm:grid-cols-[auto_minmax(0,1fr)_130px_auto] sm:items-center">
@@ -112,9 +129,7 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
             <p className={`truncate text-sm font-medium ${ing.nombre ? '' : 'italic text-muted'}`}>
               {ing.nombre || 'Nuevo ingrediente'}
             </p>
-            <p className="mt-0.5 text-xs text-muted">
-              {calories} kcal · P {protein}g · C {carbs}g · G {fat}g
-            </p>
+            {macroChips}
           </div>
         </div>
 
@@ -122,20 +137,7 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
           <p className={`truncate text-sm font-medium ${ing.nombre ? '' : 'italic text-muted'}`}>
             {ing.nombre || 'Nuevo ingrediente'}
           </p>
-          <div className="mt-1 flex flex-nowrap gap-1">
-            <Chip size="sm" variant="secondary">
-              <Chip.Label>{calories} kcal</Chip.Label>
-            </Chip>
-            <Chip size="sm" variant="secondary">
-              <Chip.Label>P {protein}g</Chip.Label>
-            </Chip>
-            <Chip size="sm" variant="secondary">
-              <Chip.Label>C {carbs}g</Chip.Label>
-            </Chip>
-            <Chip size="sm" variant="secondary">
-              <Chip.Label>G {fat}g</Chip.Label>
-            </Chip>
-          </div>
+          {macroChips}
         </div>
 
         <NumberField
@@ -402,7 +404,7 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={(open) => { if (!open) handleCancel(); }}>
       <Drawer.Content placement={drawerPlacement}>
-        <Drawer.Dialog className="max-h-[100dvh] sm:w-[min(560px,calc(100vw-2rem))]">
+        <Drawer.Dialog className="max-h-[100dvh] sm:w-[min(720px,calc(100vw-2rem))]">
           <Drawer.CloseTrigger />
           <Drawer.Handle className="sm:hidden" />
           <Drawer.Header className="border-b border-border/20">
@@ -473,7 +475,7 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
                   description="Busca un alimento o escríbelo manualmente con sus macros."
                 />
                 {ingredients.length > 0 ? (
-                  <Chip size="sm" variant="secondary">
+                  <Chip size="sm" variant="secondary" className="ring-1 ring-border/40">
                     <Chip.Label>{ingredients.length}</Chip.Label>
                   </Chip>
                 ) : null}
