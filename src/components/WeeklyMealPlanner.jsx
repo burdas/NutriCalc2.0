@@ -233,7 +233,7 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
               }}
               className="w-full"
             >
-              <Label>Alimento</Label>
+              <Label className="text-xs">Alimento</Label>
               <ComboBox.InputGroup>
                 <Input placeholder="Buscar alimento..." />
                 <ComboBox.Trigger />
@@ -285,38 +285,43 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
               </ComboBox.Popover>
             </ComboBox>
 
-            <div className="rounded-lg border border-border/20 bg-surface p-3">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Macros por 100 g</span>
-                <span className="text-xs font-semibold tabular-nums text-muted">{baseCalories} kcal</span>
-              </div>
+            <div className="rounded-lg border border-border/20 bg-surface px-3 py-2.5">
               {isFoundFood ? (
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-md bg-surface-secondary px-2 py-2">
-                    <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Proteínas</span>
-                    <span className="text-sm font-semibold tabular-nums">{ing.proteinas || 0}g</span>
-                  </div>
-                  <div className="rounded-md bg-surface-secondary px-2 py-2">
-                    <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Carbos</span>
-                    <span className="text-sm font-semibold tabular-nums">{ing.carbohidratos || 0}g</span>
-                  </div>
-                  <div className="rounded-md bg-surface-secondary px-2 py-2">
-                    <span className="block text-[10px] font-medium uppercase tracking-wider text-muted">Grasas</span>
-                    <span className="text-sm font-semibold tabular-nums">{ing.grasas || 0}g</span>
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted">Macros por 100 g</span>
+                  <div className="flex flex-wrap items-center gap-x-3">
+                    <span className="text-sm font-semibold tabular-nums text-muted">{baseCalories} kcal</span>
+                    <span className="flex items-baseline gap-1">
+                      <span className="text-sm font-semibold tabular-nums">{ing.proteinas || 0}g</span>
+                      <span className="text-xs text-muted">prot</span>
+                    </span>
+                    <span className="flex items-baseline gap-1">
+                      <span className="text-sm font-semibold tabular-nums">{ing.carbohidratos || 0}g</span>
+                      <span className="text-xs text-muted">carb</span>
+                    </span>
+                    <span className="flex items-baseline gap-1">
+                      <span className="text-sm font-semibold tabular-nums">{ing.grasas || 0}g</span>
+                      <span className="text-xs text-muted">gras</span>
+                    </span>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <>
+                  <div className="mb-2.5 flex items-center justify-between gap-3">
+                    <span className="text-xs font-medium uppercase tracking-wider text-muted">Macros por 100 g</span>
+                    <span className="text-sm font-semibold tabular-nums text-muted">{baseCalories} kcal</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <NumberField
                     value={ing.proteinas || 0}
                     onChange={(v) => onUpdate(ing.id, 'proteinas', v ?? 0)}
                     minValue={0}
                     variant="secondary"
                   >
-                    <Label>Proteínas</Label>
-                    <NumberField.Group>
+                    <Label className="text-xs">Proteínas</Label>
+                    <NumberField.Group className="h-8">
                       <NumberField.DecrementButton />
-                      <NumberField.Input placeholder="0" />
+                      <NumberField.Input className="text-xs" placeholder="0" />
                       <NumberField.IncrementButton />
                     </NumberField.Group>
                   </NumberField>
@@ -326,10 +331,10 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
                     minValue={0}
                     variant="secondary"
                   >
-                    <Label>Carbohidratos</Label>
-                    <NumberField.Group>
+                    <Label className="text-xs">Carbohidratos</Label>
+                    <NumberField.Group className="h-8">
                       <NumberField.DecrementButton />
-                      <NumberField.Input placeholder="0" />
+                      <NumberField.Input className="text-xs" placeholder="0" />
                       <NumberField.IncrementButton />
                     </NumberField.Group>
                   </NumberField>
@@ -339,14 +344,15 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
                     minValue={0}
                     variant="secondary"
                   >
-                    <Label>Grasas</Label>
-                    <NumberField.Group>
+                    <Label className="text-xs">Grasas</Label>
+                    <NumberField.Group className="h-8">
                       <NumberField.DecrementButton />
-                      <NumberField.Input placeholder="0" />
+                      <NumberField.Input className="text-xs" placeholder="0" />
                       <NumberField.IncrementButton />
                     </NumberField.Group>
                   </NumberField>
-                </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
