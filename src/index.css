@@ -62,3 +62,7 @@ body {
 .radio-pill-group [data-slot="radio"] {
   margin-top: 0;
 }
+
+.drawer__dialog[data-placement="bottom"] {
+  max-height: var(--visual-viewport-height);
+}

@@ -435,7 +435,7 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={(open) => { if (!open) handleCancel(); }}>
       <Drawer.Content placement={drawerPlacement}>
-        <Drawer.Dialog className="max-h-[100dvh] sm:w-[min(720px,calc(100vw-2rem))]">
+        <Drawer.Dialog className="sm:w-[min(720px,calc(100vw-2rem))]">
           <Drawer.CloseTrigger />
           <Drawer.Handle className="sm:hidden" />
           <Drawer.Header className="border-b border-border/20">
