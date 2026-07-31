@@ -131,6 +131,25 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
             </p>
             {macroChips}
           </div>
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:hidden">
+            <button
+              type="button"
+              onClick={onToggle}
+              className="cursor-pointer rounded-full p-2 text-muted transition-colors hover:bg-accent/10 hover:text-accent"
+              aria-label={isExpanded ? 'Ocultar detalles del ingrediente' : 'Editar detalles del ingrediente'}
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => onRemove(ing.id)}
+              className="cursor-pointer rounded-full p-2 text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+              aria-label="Eliminar ingrediente"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         </div>
 
         <div className="hidden min-w-0 overflow-hidden sm:block">
@@ -156,7 +175,7 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
           </NumberField.Group>
         </NumberField>
 
-        <div className="flex items-center justify-end gap-1">
+        <div className="hidden items-center justify-end gap-1 sm:flex">
           <button
             type="button"
             onClick={onToggle}
