@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, RadioGroup, Radio, Drawer, Button, NumberField, Label, ComboBox, Input, ListBox, TextField, Chip } from '@heroui/react';
-import { calculateCalories } from '../utils/calculations';
+import { calculateCalories, roundKcal, roundMacro } from '../utils/calculations';
 import {
   DndContext,
   DragOverlay,
@@ -86,10 +86,10 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
   const isFoundFood = Boolean(ing.productCode || ing.imagen);
   const factor = (ing.cantidad || 100) / 100;
   const baseCalories = ing.calorias || 0;
-  const calories = Math.round((ing.calorias || 0) * factor);
-  const protein = Math.round((ing.proteinas || 0) * factor * 10) / 10;
-  const carbs = Math.round((ing.carbohidratos || 0) * factor * 10) / 10;
-  const fat = Math.round((ing.grasas || 0) * factor * 10) / 10;
+  const calories = roundKcal((ing.calorias || 0) * factor);
+  const protein = roundMacro((ing.proteinas || 0) * factor);
+  const carbs = roundMacro((ing.carbohidratos || 0) * factor);
+  const fat = roundMacro((ing.grasas || 0) * factor);
 
   const macroChips = (
     <div className="mt-1 flex flex-wrap gap-1 sm:flex-nowrap">
@@ -382,14 +382,20 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
         carb += (ing.carbohidratos || 0) * factor;
         gras += (ing.grasas || 0) * factor;
       }
-      setProteinas(prot);
-      setCarbohidratos(carb);
-      setGrasas(gras);
+      setProteinas(roundMacro(prot));
+      setCarbohidratos(roundMacro(carb));
+      setGrasas(roundMacro(gras));
     }
   }, [ingredients]);
 
   function handleSave() {
-    onUpdateBulk(day, slot, meal.id, { nombre, calorias, proteinas, carbohidratos, grasas });
+    onUpdateBulk(day, slot, meal.id, {
+      nombre,
+      calorias: roundKcal(calorias),
+      proteinas: roundMacro(proteinas),
+      carbohidratos: roundMacro(carbohidratos),
+      grasas: roundMacro(grasas),
+    });
     onUpdateIngredients(day, slot, meal.id, ingredients);
     onClose();
   }
@@ -421,7 +427,7 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
     setIngredients(prev => prev.map(i => {
       if (i.id !== id) return i;
       const updated = { ...i, [field]: value };
-      updated.calorias = calculateCalories(updated.proteinas, updated.carbohidratos, updated.grasas);
+      updated.calorias = roundKcal(calculateCalories(updated.proteinas, updated.carbohidratos, updated.grasas));
       return updated;
     }));
   }
@@ -454,10 +460,10 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
             </section>
 
             <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <MacroMetric label="Calorías" value={calorias} unit="kcal" emphasis />
-              <MacroMetric label="Proteínas" value={Math.round(proteinas * 10) / 10} unit="g" />
-              <MacroMetric label="Carbos" value={Math.round(carbohidratos * 10) / 10} unit="g" />
-              <MacroMetric label="Grasas" value={Math.round(grasas * 10) / 10} unit="g" />
+              <MacroMetric label="Calorías" value={roundKcal(calorias)} unit="kcal" emphasis />
+              <MacroMetric label="Proteínas" value={roundMacro(proteinas)} unit="g" />
+              <MacroMetric label="Carbos" value={roundMacro(carbohidratos)} unit="g" />
+              <MacroMetric label="Grasas" value={roundMacro(grasas)} unit="g" />
             </section>
 
             <section className={`flex flex-col gap-3 ${ingredients.length > 0 ? 'opacity-70' : ''}`}>
@@ -613,7 +619,7 @@ function SortableMealCard({ meal, day, slot, onRemove, onUpdateBulk, onUpdateIng
                 className="inline-block text-xs text-muted"
                 style={{ animation: marqueeHover ? 'marquee 6s linear infinite' : 'none' }}
               >
-                {meal.calorias || 0} cal &middot; {meal.proteinas || 0}g prot &middot; {meal.carbohidratos || 0}g carb &middot; {meal.grasas || 0}g gras
+                {roundKcal(meal.calorias)} cal &middot; {roundMacro(meal.proteinas)}g prot &middot; {roundMacro(meal.carbohidratos)}g carb &middot; {roundMacro(meal.grasas)}g gras
               </span>
             </div>
           </div>
@@ -645,7 +651,7 @@ function MealCardPreview({ meal }) {
           </p>
           <div className="overflow-hidden whitespace-nowrap">
             <span className="inline-block text-xs text-muted" style={{ animation: 'marquee 6s linear infinite' }}>
-              {meal.calorias || 0} cal &middot; {meal.proteinas || 0}g prot &middot; {meal.carbohidratos || 0}g carb &middot; {meal.grasas || 0}g gras
+              {roundKcal(meal.calorias)} cal &middot; {roundMacro(meal.proteinas)}g prot &middot; {roundMacro(meal.carbohidratos)}g carb &middot; {roundMacro(meal.grasas)}g gras
             </span>
           </div>
         </div>
@@ -696,7 +702,7 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onUpdateMealBulk, o
         <Card.Title className="text-sm capitalize">{day}</Card.Title>
         <div className="flex items-center gap-2 text-xs text-muted">
           <span>
-            {totals.calorias} / {target || '—'} kcal
+            {roundKcal(totals.calorias)} / {target || '—'} kcal
           </span>
         </div>
         {target > 0 && (
@@ -725,26 +731,26 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onUpdateMealBulk, o
       <Card.Footer className="flex flex-col gap-1 pt-2 text-xs">
         <div className="flex w-full justify-between">
           <span className="text-muted">Total</span>
-          <span className="font-semibold">{totals.calorias} kcal</span>
+          <span className="font-semibold">{roundKcal(totals.calorias)} kcal</span>
         </div>
         {macros && (
           <>
             <div className="flex w-full justify-between text-muted">
               <span>Proteínas</span>
               <span>
-                {totals.proteinas} / {macros.proteinG}g
+                {roundMacro(totals.proteinas)} / {macros.proteinG}g
               </span>
             </div>
             <div className="flex w-full justify-between text-muted">
               <span>Carbohidratos</span>
               <span>
-                {totals.carbohidratos} / {macros.carbG}g
+                {roundMacro(totals.carbohidratos)} / {macros.carbG}g
               </span>
             </div>
             <div className="flex w-full justify-between text-muted">
               <span>Grasas</span>
               <span>
-                {totals.grasas} / {macros.fatG}g
+                {roundMacro(totals.grasas)} / {macros.fatG}g
               </span>
             </div>
           </>

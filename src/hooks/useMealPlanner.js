@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { roundKcal, roundMacro } from '../utils/calculations';
 
 const STORAGE_KEY = 'meal-plan:v2';
 
@@ -144,7 +145,12 @@ export function useMealPlanner() {
           }
         }
       }
-      totals[day] = { calorias: cal, proteinas: prot, carbohidratos: carb, grasas: gras };
+      totals[day] = {
+        calorias: roundKcal(cal),
+        proteinas: roundMacro(prot),
+        carbohidratos: roundMacro(carb),
+        grasas: roundMacro(gras),
+      };
     }
     return totals;
   }, [mealPlan]);

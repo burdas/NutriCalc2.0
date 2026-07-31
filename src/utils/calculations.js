@@ -25,6 +25,14 @@ export function calculateTargetCalories(tdee, goal, goalAdjustments = DEFAULT_GO
   return Math.round(tdee + (goalAdjustments[goal] ?? 0));
 }
 
+export function roundKcal(value) {
+  return Math.round(value || 0);
+}
+
+export function roundMacro(value) {
+  return Math.round((value || 0) * 10) / 10;
+}
+
 export function calculateCalories(proteinas, carbohidratos, grasas) {
   return (proteinas || 0) * 4 + (carbohidratos || 0) * 4 + (grasas || 0) * 9;
 }
