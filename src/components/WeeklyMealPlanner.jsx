@@ -285,7 +285,7 @@ function IngredientRow({ ing, isExpanded, onToggle, onUpdate, onRemove }) {
               </ComboBox.Popover>
             </ComboBox>
 
-            <div className="rounded-lg border border-border/20 bg-surface-tertiary p-3">
+            <div className="rounded-lg border border-border/20 bg-surface p-3">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-muted">Macros por 100 g</span>
                 <span className="text-xs font-semibold tabular-nums text-muted">{baseCalories} kcal</span>
