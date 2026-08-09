@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, RadioGroup, Radio, Drawer, Button, NumberField, Label, ComboBox, Input, ListBox, TextField, Chip, Dropdown } from '@heroui/react';
 import { calculateCalories, roundKcal, roundMacro } from '../utils/calculations';
+import { SharePlanModal } from './SharePlanModal';
 import {
   DndContext,
   DragOverlay,
@@ -16,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files, Move, MoreVertical } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files, Move, MoreVertical, Share2 } from 'lucide-react';
 import { useOpenFoodFacts } from '../hooks/useOpenFoodFacts';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -920,6 +921,7 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, on
 export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
   const [selectedDay, setSelectedDay] = useState('lunes');
   const [activeMeal, setActiveMeal] = useState(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -988,12 +990,17 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplica
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <section className="pb-12 animate-[fadeInUp_0.5s_ease-out_0.7s_both]">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold">Planificador semanal de comidas</h2>
-          <p className="text-muted text-sm">
-            Registra tus comidas diarias y compáralas con tus objetivos calóricos y de macronutrientes
-          </p>
+      <section id="planificador-semanal" className="pb-12 animate-[fadeInUp_0.5s_ease-out_0.7s_both]">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold">Planificador semanal de comidas</h2>
+            <p className="text-muted text-sm">
+              Registra tus comidas diarias y compáralas con tus objetivos calóricos y de macronutrientes
+            </p>
+          </div>
+          <Button isIconOnly variant="tertiary" size="sm" aria-label="Compartir plan" onPress={() => setShareOpen(true)}>
+            <Share2 className="size-4" />
+          </Button>
         </div>
 
         <RadioGroup
@@ -1054,6 +1061,12 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplica
       <DragOverlay>
         {activeMeal ? <MealCardPreview meal={activeMeal} /> : null}
       </DragOverlay>
+
+      <SharePlanModal
+        mealPlan={mealPlan}
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+      />
     </DndContext>
   );
 }

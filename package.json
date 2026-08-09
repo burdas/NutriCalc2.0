@@ -16,6 +16,7 @@
     "@heroui/react": "^3.2.2",
     "@heroui/styles": "^3.2.2",
     "lucide-react": "^1.26.0",
+    "lz-string": "^1.5.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "recharts": "^3.10.0"

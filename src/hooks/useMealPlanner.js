@@ -153,6 +153,10 @@ export function useMealPlanner() {
     });
   }, [persist]);
 
+  const replacePlan = useCallback((next) => {
+    setMealPlan(persist(next));
+  }, [persist]);
+
   const dailyTotals = useMemo(() => {
     const totals = {};
     for (const day of DAYS) {
@@ -181,5 +185,5 @@ export function useMealPlanner() {
     return totals;
   }, [mealPlan]);
 
-  return { mealPlan, updateMeal, updateMealBulk, updateMealIngredients, addMeal, duplicateMeal, removeMeal, moveMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
+  return { mealPlan, replacePlan, updateMeal, updateMealBulk, updateMealIngredients, addMeal, duplicateMeal, removeMeal, moveMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
 }

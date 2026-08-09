@@ -8,6 +8,7 @@ const WeightProjection = lazy(() => import('./components/WeightProjection').then
 const WeeklyMealPlanner = lazy(() => import('./components/WeeklyMealPlanner').then(m => ({ default: m.WeeklyMealPlanner })));
 import { SettingsPanel } from './components/SettingsPanel';
 import { InfoContent } from './components/InfoContent';
+import { ImportPlanModal } from './components/ImportPlanModal';
 import { useDarkMode } from './hooks/useDarkMode';
 import { useConfig } from './hooks/useConfig';
 import { useMealPlanner } from './hooks/useMealPlanner';
@@ -18,6 +19,7 @@ import {
   calculateMacros,
 } from './utils/calculations';
 import { MACRO_PRESETS } from './utils/defaults';
+import { deserializePlan, parseSharedHash, clearSharedHash, reassignIds } from './utils/sharePlan';
 
 const STORAGE_KEY = 'calorie-form-values:v1';
 const TARGET_WEIGHT_KEY = 'calorie-target-weight:v1';
@@ -42,10 +44,11 @@ function loadInitialValues() {
 function App() {
   const { isDark, toggle: toggleDark } = useDarkMode();
   const { config, setConfig, resetConfig } = useConfig();
-  const { mealPlan, addMeal, duplicateMeal, removeMeal, moveMeal, updateMealBulk, updateMealIngredients, dailyTotals } = useMealPlanner();
+  const { mealPlan, replacePlan, addMeal, duplicateMeal, removeMeal, moveMeal, updateMealBulk, updateMealIngredients, dailyTotals } = useMealPlanner();
   const [values, setValues] = useState(loadInitialValues);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [sharedPlan, setSharedPlan] = useState(null);
   const [targetWeight, setTargetWeight] = useState(() => {
     try {
       const stored = localStorage.getItem(TARGET_WEIGHT_KEY);
@@ -62,6 +65,27 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
   }, [values]);
+
+  useEffect(() => {
+    const encoded = parseSharedHash();
+    if (!encoded) return;
+    const plan = deserializePlan(encoded);
+    if (plan) setSharedPlan(plan);
+  }, []);
+
+  function handleLoadSharedPlan() {
+    if (!sharedPlan) return;
+    replacePlan(reassignIds(sharedPlan));
+    setSharedPlan(null);
+    clearSharedHash();
+    requestAnimationFrame(() => {
+      document.getElementById('planificador-semanal')?.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  function handleDismissSharedPlan() {
+    setSharedPlan(null);
+  }
 
   const macroConfig = useMemo(() => {
     const preset = config.macroPreset;
@@ -222,6 +246,13 @@ function App() {
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
+
+      <ImportPlanModal
+        plan={sharedPlan}
+        isOpen={Boolean(sharedPlan)}
+        onCancel={handleDismissSharedPlan}
+        onConfirm={handleLoadSharedPlan}
+      />
     </>
   );
 }
