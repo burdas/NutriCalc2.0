@@ -99,6 +99,32 @@ export function useMealPlanner() {
     );
   }, [persist]);
 
+  const duplicateMeal = useCallback((day, slot, mealId) => {
+    setMealPlan((prev) => {
+      const meals = prev[day][slot];
+      const index = meals.findIndex((m) => m.id === mealId);
+      if (index === -1) return prev;
+
+      const source = meals[index];
+      const copy = {
+        ...source,
+        id: generateId(),
+        ingredients: (source.ingredients || []).map((ing) => ({
+          ...ing,
+          id: 'i_' + Date.now() + Math.random(),
+        })),
+      };
+
+      const next = [...meals];
+      next.splice(index + 1, 0, copy);
+
+      return persist({
+        ...prev,
+        [day]: { ...prev[day], [slot]: next },
+      });
+    });
+  }, [persist]);
+
   const removeMeal = useCallback((day, slot, mealId) => {
     setMealPlan((prev) =>
       persist({
@@ -155,5 +181,5 @@ export function useMealPlanner() {
     return totals;
   }, [mealPlan]);
 
-  return { mealPlan, updateMeal, updateMealBulk, updateMealIngredients, addMeal, removeMeal, moveMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
+  return { mealPlan, updateMeal, updateMealBulk, updateMealIngredients, addMeal, duplicateMeal, removeMeal, moveMeal, dailyTotals, DAYS, MEAL_SLOTS, SLOT_LABELS };
 }

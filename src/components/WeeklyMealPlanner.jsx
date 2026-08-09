@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files } from 'lucide-react';
 import { useOpenFoodFacts } from '../hooks/useOpenFoodFacts';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -555,7 +555,7 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
   );
 }
 
-function SortableMealCard({ meal, day, slot, onRemove, onUpdateBulk, onUpdateIngredients }) {
+function SortableMealCard({ meal, day, slot, onRemove, onDuplicateMeal, onUpdateBulk, onUpdateIngredients }) {
   const {
     attributes,
     listeners,
@@ -601,6 +601,13 @@ function SortableMealCard({ meal, day, slot, onRemove, onUpdateBulk, onUpdateIng
                 aria-label="Editar comida"
               >
                 <Pencil className="size-3.5" />
+              </button>
+              <button
+                onClick={() => onDuplicateMeal(day, slot, meal.id)}
+                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors"
+                aria-label="Duplicar comida"
+              >
+                <Files className="size-3.5" />
               </button>
               <button
                 onClick={() => onRemove(day, slot, meal.id)}
@@ -660,7 +667,7 @@ function MealCardPreview({ meal }) {
   );
 }
 
-function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onUpdateMealBulk, onUpdateMealIngredients }) {
+function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onDuplicateMeal, onUpdateMealBulk, onUpdateMealIngredients }) {
   const mealIds = meals.map((m) => m.id);
 
   return (
@@ -675,6 +682,7 @@ function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onUpdateMealBulk,
               day={day}
               slot={slot}
               onRemove={onRemoveMeal}
+              onDuplicateMeal={onDuplicateMeal}
               onUpdateBulk={onUpdateMealBulk}
               onUpdateIngredients={onUpdateMealIngredients}
             />
@@ -692,7 +700,7 @@ function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onUpdateMealBulk,
   );
 }
 
-function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
+function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
   const totals = dailyTotals[day];
   const progress = target ? Math.min(Math.round((totals.calorias / target) * 100), 100) : 0;
 
@@ -722,8 +730,9 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onUpdateMealBulk, o
             slot={slot}
             meals={mealPlan[day][slot]}
             onAddMeal={onAddMeal}
-            onRemoveMeal={onRemoveMeal}
-            onUpdateMealBulk={onUpdateMealBulk}
+                    onRemoveMeal={onRemoveMeal}
+                    onDuplicateMeal={onDuplicateMeal}
+                    onUpdateMealBulk={onUpdateMealBulk}
             onUpdateMealIngredients={onUpdateMealIngredients}
           />
         ))}
@@ -760,7 +769,7 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onUpdateMealBulk, o
   );
 }
 
-export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
+export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
   const [selectedDay, setSelectedDay] = useState('lunes');
   const [activeMeal, setActiveMeal] = useState(null);
 
@@ -864,6 +873,7 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onMoveMea
                   mealPlan={mealPlan}
                   onAddMeal={onAddMeal}
                   onRemoveMeal={onRemoveMeal}
+                  onDuplicateMeal={onDuplicateMeal}
                   onUpdateMealBulk={onUpdateMealBulk}
                   onUpdateMealIngredients={onUpdateMealIngredients}
                   dailyTotals={dailyTotals}
@@ -881,6 +891,7 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onMoveMea
             mealPlan={mealPlan}
             onAddMeal={onAddMeal}
             onRemoveMeal={onRemoveMeal}
+            onDuplicateMeal={onDuplicateMeal}
             onUpdateMealBulk={onUpdateMealBulk}
             onUpdateMealIngredients={onUpdateMealIngredients}
             dailyTotals={dailyTotals}
