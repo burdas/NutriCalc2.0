@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files, Move } from 'lucide-react';
 import { useOpenFoodFacts } from '../hooks/useOpenFoodFacts';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -555,7 +555,88 @@ function MealEditorDrawer({ meal, day, slot, onUpdateBulk, onUpdateIngredients, 
   );
 }
 
-function SortableMealCard({ meal, day, slot, onRemove, onDuplicateMeal, onUpdateBulk, onUpdateIngredients }) {
+function MoveMealDrawer({ meal, day, slot, mealPlan, isOpen, onClose, onMove }) {
+  const [destDay, setDestDay] = useState(day);
+  const [destSlot, setDestSlot] = useState(slot);
+  const drawerPlacement = useDrawerPlacement();
+
+  useEffect(() => {
+    if (isOpen) {
+      setDestDay(day);
+      setDestSlot(slot);
+    }
+  }, [isOpen, day, slot]);
+
+  const canMove = destDay !== day || destSlot !== slot;
+
+  function handleMove() {
+    const srcArr = mealPlan[day][slot];
+    const index = srcArr.findIndex((m) => m.id === meal.id);
+    if (index === -1) return;
+    onMove(day, slot, index, destDay, destSlot);
+    onClose();
+  }
+
+  return (
+    <Drawer.Backdrop isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <Drawer.Content placement={drawerPlacement}>
+        <Drawer.Dialog className="sm:w-[min(720px,calc(100vw-2rem))]">
+          <Drawer.CloseTrigger />
+          <Drawer.Handle className="sm:hidden" />
+          <Drawer.Header className="border-b border-border/20">
+            <div className="flex flex-col gap-1 pr-8">
+              <Drawer.Heading>Mover comida</Drawer.Heading>
+              <p className="text-xs capitalize text-muted">
+                {meal.nombre || 'Sin nombre'} · {day} · {SLOT_LABELS[slot]}
+              </p>
+            </div>
+          </Drawer.Header>
+          <Drawer.Body className="flex flex-col gap-5 overflow-y-auto">
+            <section className="flex flex-col gap-3">
+              <SectionHeader title="Día" description="Selecciona el día de destino." />
+              <RadioGroup value={destDay} onChange={setDestDay} aria-label="Día de destino">
+                <div className="radio-pill-group grid w-full grid-cols-7 gap-1 rounded-full bg-surface-secondary p-1.5">
+                  {DAYS.map((d) => (
+                    <Radio key={d} value={d} className="flex items-center">
+                      <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full py-1.5 text-xs font-medium text-foreground/60 transition-colors data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
+                        {DAY_ABBR[d]}
+                      </Radio.Content>
+                    </Radio>
+                  ))}
+                </div>
+              </RadioGroup>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <SectionHeader title="Momento del día" description="Selecciona la comida de destino." />
+              <RadioGroup value={destSlot} onChange={setDestSlot} aria-label="Momento del día de destino">
+                <div className="radio-pill-group grid w-full grid-cols-5 gap-1 rounded-full bg-surface-secondary p-1.5">
+                  {MEAL_SLOTS.map((s) => (
+                    <Radio key={s} value={s} className="flex items-center">
+                      <Radio.Content className="flex w-full cursor-pointer items-center justify-center rounded-full py-1.5 text-xs font-medium text-foreground/60 transition-colors data-[selected=true]:bg-surface-tertiary data-[selected=true]:text-surface-tertiary-foreground data-[selected=true]:shadow-sm">
+                        {SLOT_LABELS[s]}
+                      </Radio.Content>
+                    </Radio>
+                  ))}
+                </div>
+              </RadioGroup>
+            </section>
+          </Drawer.Body>
+          <Drawer.Footer className="sticky bottom-0 flex justify-end gap-2 border-t border-border/20 bg-content1">
+            <Button variant="tertiary" size="sm" onPress={onClose}>
+              Cancelar
+            </Button>
+            <Button variant="primary" size="sm" isDisabled={!canMove} onPress={handleMove}>
+              Mover
+            </Button>
+          </Drawer.Footer>
+        </Drawer.Dialog>
+      </Drawer.Content>
+    </Drawer.Backdrop>
+  );
+}
+
+function SortableMealCard({ meal, day, slot, mealPlan, onMoveMeal, onRemove, onDuplicateMeal, onUpdateBulk, onUpdateIngredients }) {
   const {
     attributes,
     listeners,
@@ -566,6 +647,7 @@ function SortableMealCard({ meal, day, slot, onRemove, onDuplicateMeal, onUpdate
   } = useSortable({ id: meal.id, data: { day, slot, type: 'meal' } });
 
   const [editOpen, setEditOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const [marqueeHover, setMarqueeHover] = useState(false);
 
   const style = {
@@ -595,6 +677,13 @@ function SortableMealCard({ meal, day, slot, onRemove, onDuplicateMeal, onUpdate
               <p className={`min-w-0 flex-1 truncate text-sm font-medium ${meal.nombre ? 'text-foreground' : 'italic text-muted/50'}`}>
                 {meal.nombre || 'Sin nombre'}
               </p>
+              <button
+                onClick={() => setMoveOpen(true)}
+                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors lg:hidden"
+                aria-label="Mover a otro día"
+              >
+                <Move className="size-3.5" />
+              </button>
               <button
                 onClick={() => setEditOpen(true)}
                 className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors"
@@ -641,6 +730,15 @@ function SortableMealCard({ meal, day, slot, onRemove, onDuplicateMeal, onUpdate
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}
       />
+      <MoveMealDrawer
+        meal={meal}
+        day={day}
+        slot={slot}
+        mealPlan={mealPlan}
+        isOpen={moveOpen}
+        onClose={() => setMoveOpen(false)}
+        onMove={onMoveMeal}
+      />
     </>
   );
 }
@@ -667,7 +765,7 @@ function MealCardPreview({ meal }) {
   );
 }
 
-function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onDuplicateMeal, onUpdateMealBulk, onUpdateMealIngredients }) {
+function MealSlot({ day, slot, meals, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients }) {
   const mealIds = meals.map((m) => m.id);
 
   return (
@@ -681,6 +779,8 @@ function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onDuplicateMeal, 
               meal={meal}
               day={day}
               slot={slot}
+              mealPlan={mealPlan}
+              onMoveMeal={onMoveMeal}
               onRemove={onRemoveMeal}
               onDuplicateMeal={onDuplicateMeal}
               onUpdateBulk={onUpdateMealBulk}
@@ -700,7 +800,7 @@ function MealSlot({ day, slot, meals, onAddMeal, onRemoveMeal, onDuplicateMeal, 
   );
 }
 
-function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
+function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
   const totals = dailyTotals[day];
   const progress = target ? Math.min(Math.round((totals.calorias / target) * 100), 100) : 0;
 
@@ -729,9 +829,11 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, on
             day={day}
             slot={slot}
             meals={mealPlan[day][slot]}
+            mealPlan={mealPlan}
             onAddMeal={onAddMeal}
                     onRemoveMeal={onRemoveMeal}
                     onDuplicateMeal={onDuplicateMeal}
+                    onMoveMeal={onMoveMeal}
                     onUpdateMealBulk={onUpdateMealBulk}
             onUpdateMealIngredients={onUpdateMealIngredients}
           />
@@ -874,6 +976,7 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplica
                   onAddMeal={onAddMeal}
                   onRemoveMeal={onRemoveMeal}
                   onDuplicateMeal={onDuplicateMeal}
+                  onMoveMeal={onMoveMeal}
                   onUpdateMealBulk={onUpdateMealBulk}
                   onUpdateMealIngredients={onUpdateMealIngredients}
                   dailyTotals={dailyTotals}
@@ -892,6 +995,7 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplica
             onAddMeal={onAddMeal}
             onRemoveMeal={onRemoveMeal}
             onDuplicateMeal={onDuplicateMeal}
+            onMoveMeal={onMoveMeal}
             onUpdateMealBulk={onUpdateMealBulk}
             onUpdateMealIngredients={onUpdateMealIngredients}
             dailyTotals={dailyTotals}
