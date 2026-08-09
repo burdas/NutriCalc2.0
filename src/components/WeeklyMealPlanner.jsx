@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, RadioGroup, Radio, Drawer, Button, NumberField, Label, ComboBox, Input, ListBox, TextField, Chip } from '@heroui/react';
+import { Card, RadioGroup, Radio, Drawer, Button, NumberField, Label, ComboBox, Input, ListBox, TextField, Chip, Dropdown } from '@heroui/react';
 import { calculateCalories, roundKcal, roundMacro } from '../utils/calculations';
 import {
   DndContext,
@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files, Move } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files, Move, MoreVertical } from 'lucide-react';
 import { useOpenFoodFacts } from '../hooks/useOpenFoodFacts';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -686,25 +686,71 @@ function SortableMealCard({ meal, day, slot, mealPlan, onMoveMeal, onRemove, onD
               </button>
               <button
                 onClick={() => setEditOpen(true)}
-                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors"
+                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors lg:hidden"
                 aria-label="Editar comida"
               >
                 <Pencil className="size-3.5" />
               </button>
               <button
                 onClick={() => onDuplicateMeal(day, slot, meal.id)}
-                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors"
+                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-accent/10 hover:text-accent transition-colors lg:hidden"
                 aria-label="Duplicar comida"
               >
                 <Files className="size-3.5" />
               </button>
               <button
                 onClick={() => onRemove(day, slot, meal.id)}
-                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-danger/10 hover:text-danger transition-colors"
+                className="cursor-pointer rounded-full p-1.5 text-muted hover:bg-danger/10 hover:text-danger transition-colors lg:hidden"
                 aria-label="Eliminar comida"
               >
                 <X className="size-3.5" />
               </button>
+              <Dropdown>
+                <Dropdown.Trigger>
+                  <button
+                    type="button"
+                    className="hidden cursor-pointer rounded-full p-1.5 text-muted transition-colors hover:bg-accent/10 hover:text-accent lg:inline-flex"
+                    aria-label="Más acciones"
+                  >
+                    <MoreVertical className="size-3.5" />
+                  </button>
+                </Dropdown.Trigger>
+                <Dropdown.Popover placement="bottom end">
+                  <Dropdown.Menu onAction={(key) => {
+                    switch (key) {
+                      case 'edit':
+                        setEditOpen(true);
+                        break;
+                      case 'move':
+                        setMoveOpen(true);
+                        break;
+                      case 'duplicate':
+                        onDuplicateMeal(day, slot, meal.id);
+                        break;
+                      case 'delete':
+                        onRemove(day, slot, meal.id);
+                        break;
+                    }
+                  }}>
+                    <Dropdown.Item id="edit" textValue="Editar comida">
+                      <Pencil className="size-4 shrink-0 text-muted" />
+                      <Label>Editar</Label>
+                    </Dropdown.Item>
+                    <Dropdown.Item id="move" textValue="Mover a otro día">
+                      <Move className="size-4 shrink-0 text-muted" />
+                      <Label>Mover a otro día</Label>
+                    </Dropdown.Item>
+                    <Dropdown.Item id="duplicate" textValue="Duplicar comida">
+                      <Files className="size-4 shrink-0 text-muted" />
+                      <Label>Duplicar</Label>
+                    </Dropdown.Item>
+                    <Dropdown.Item id="delete" textValue="Eliminar comida" variant="danger">
+                      <X className="size-4 shrink-0 text-danger" />
+                      <Label>Eliminar</Label>
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown.Popover>
+              </Dropdown>
             </div>
             <div
               className="overflow-hidden whitespace-nowrap"
