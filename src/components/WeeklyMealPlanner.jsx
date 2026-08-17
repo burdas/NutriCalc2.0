@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, RadioGroup, Radio, Drawer, Button, NumberField, Label, ComboBox, Input, ListBox, TextField, Chip, Dropdown } from '@heroui/react';
 import { calculateCalories, roundKcal, roundMacro } from '../utils/calculations';
 import { SharePlanModal } from './SharePlanModal';
@@ -17,8 +17,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files, Move, MoreVertical, Share2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Plus, X, Pencil, Files, Move, MoreVertical, Share2, Sparkles } from 'lucide-react';
 import { useOpenFoodFacts } from '../hooks/useOpenFoodFacts';
+import { GenerateDietModal } from './GenerateDietModal';
 
 const DAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const DAY_ABBR = {
@@ -918,10 +919,19 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, on
   );
 }
 
-export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros }) {
+export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros, onGenerateDiet }) {
   const [selectedDay, setSelectedDay] = useState('lunes');
   const [activeMeal, setActiveMeal] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
+
+  const hasMeals = useMemo(() =>
+    DAYS.some((day) =>
+      MEAL_SLOTS.some((slot) =>
+        (mealPlan[day]?.[slot] || []).some((m) => m.nombre || m.calorias)
+      )
+    ),
+  [mealPlan]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -998,9 +1008,14 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplica
               Registra tus comidas diarias y compáralas con tus objetivos calóricos y de macronutrientes
             </p>
           </div>
-          <Button isIconOnly variant="tertiary" size="sm" aria-label="Compartir plan" onPress={() => setShareOpen(true)}>
-            <Share2 className="size-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button isIconOnly variant="tertiary" size="sm" aria-label="Generar dieta automática" onPress={() => setGenerateOpen(true)}>
+              <Sparkles className="size-4" />
+            </Button>
+            <Button isIconOnly variant="tertiary" size="sm" aria-label="Compartir plan" onPress={() => setShareOpen(true)}>
+              <Share2 className="size-4" />
+            </Button>
+          </div>
         </div>
 
         <RadioGroup
@@ -1066,6 +1081,18 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplica
         mealPlan={mealPlan}
         isOpen={shareOpen}
         onClose={() => setShareOpen(false)}
+      />
+
+      <GenerateDietModal
+        isOpen={generateOpen}
+        onClose={() => setGenerateOpen(false)}
+        onConfirm={() => {
+          setGenerateOpen(false);
+          onGenerateDiet();
+        }}
+        target={target}
+        macros={macros}
+        hasMeals={hasMeals}
       />
     </DndContext>
   );

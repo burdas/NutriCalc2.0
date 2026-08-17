@@ -20,6 +20,7 @@ import {
 } from './utils/calculations';
 import { MACRO_PRESETS } from './utils/defaults';
 import { deserializePlan, parseSharedHash, clearSharedHash, reassignIds } from './utils/sharePlan';
+import { generateDiet } from './utils/generateDiet';
 
 const STORAGE_KEY = 'calorie-form-values:v1';
 const TARGET_WEIGHT_KEY = 'calorie-target-weight:v1';
@@ -85,6 +86,15 @@ function App() {
 
   function handleDismissSharedPlan() {
     setSharedPlan(null);
+  }
+
+  function handleGenerateDiet() {
+    if (!results) return;
+    const plan = generateDiet({ targetCalories: results.targetCalories, macros: results.macros });
+    replacePlan(plan);
+    requestAnimationFrame(() => {
+      document.getElementById('planificador-semanal')?.scrollIntoView({ behavior: 'smooth' });
+    });
   }
 
   const macroConfig = useMemo(() => {
@@ -210,6 +220,7 @@ function App() {
             dailyTotals={dailyTotals}
             target={results.targetCalories}
             macros={results.macros}
+            onGenerateDiet={handleGenerateDiet}
           />
         </Suspense>
         </div>
