@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Card, Button, NumberField, Label, Tag, TagGroup } from '@heroui/react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Key } from 'lucide-react';
 import { MACRO_PRESETS } from '../utils/defaults';
 
 export function SettingsPanel({ config, setConfig, resetConfig }) {
+  const [apiKeyMasked, setApiKeyMasked] = useState(config.geminiApiKey ? '••••••••••••••••••••' : '');
   const preset = config.macroPreset;
   const isCustom = preset === 'custom';
   const macro = isCustom
@@ -150,6 +152,45 @@ export function SettingsPanel({ config, setConfig, resetConfig }) {
                 </div>
               </div>
             </div>
+          </div>
+        </Card.Content>
+      </Card>
+
+      <Card>
+        <Card.Header>
+          <Card.Title className="flex items-center gap-2">
+            <Key className="size-4 text-accent" />
+            Clave API de Google AI Studio (Gemini)
+          </Card.Title>
+          <Card.Description>
+            Introduce tu clave de Gemini para la generación automática de dietas
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <div className="flex flex-col gap-2">
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={apiKeyMasked}
+              onChange={(e) => {
+                const val = e.target.value;
+                setApiKeyMasked(val);
+                if (!val.includes('•')) {
+                  setConfig({ geminiApiKey: val });
+                }
+              }}
+              onFocus={() => {
+                if (apiKeyMasked.includes('•')) {
+                  setApiKeyMasked('');
+                  setConfig({ geminiApiKey: '' });
+                }
+              }}
+              placeholder="Introduce tu Gemini API Key..."
+              className="w-full rounded-lg border border-border/30 bg-surface-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-accent focus:outline-none"
+            />
+            <p className="text-[11px] text-muted">
+              Puedes obtener una clave gratuita en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-accent underline">Google AI Studio</a>.
+            </p>
           </div>
         </Card.Content>
       </Card>

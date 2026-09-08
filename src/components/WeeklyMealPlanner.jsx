@@ -919,7 +919,7 @@ function DayColumn({ day, mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, on
   );
 }
 
-export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros, onGenerateDiet }) {
+export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplicateMeal, onMoveMeal, onUpdateMealBulk, onUpdateMealIngredients, dailyTotals, target, macros, onGenerateDietLocal, onGenerateDietAI, config, setConfig }) {
   const [selectedDay, setSelectedDay] = useState('lunes');
   const [activeMeal, setActiveMeal] = useState(null);
   const [shareOpen, setShareOpen] = useState(false);
@@ -1086,13 +1086,17 @@ export function WeeklyMealPlanner({ mealPlan, onAddMeal, onRemoveMeal, onDuplica
       <GenerateDietModal
         isOpen={generateOpen}
         onClose={() => setGenerateOpen(false)}
-        onConfirm={() => {
-          setGenerateOpen(false);
-          onGenerateDiet();
+        onConfirmLocal={() => {
+          onGenerateDietLocal();
+        }}
+        onConfirmAI={async (params) => {
+          await onGenerateDietAI(params);
         }}
         target={target}
         macros={macros}
         hasMeals={hasMeals}
+        config={config}
+        setConfig={setConfig}
       />
     </DndContext>
   );

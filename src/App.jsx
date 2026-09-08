@@ -21,6 +21,7 @@ import {
 import { MACRO_PRESETS } from './utils/defaults';
 import { deserializePlan, parseSharedHash, clearSharedHash, reassignIds } from './utils/sharePlan';
 import { generateDiet } from './utils/generateDiet';
+import { generateDietWithGemini } from './utils/geminiDiet';
 
 const STORAGE_KEY = 'calorie-form-values:v1';
 const TARGET_WEIGHT_KEY = 'calorie-target-weight:v1';
@@ -88,9 +89,26 @@ function App() {
     setSharedPlan(null);
   }
 
-  function handleGenerateDiet() {
+  function handleGenerateDietLocal() {
     if (!results) return;
     const plan = generateDiet({ targetCalories: results.targetCalories, macros: results.macros });
+    replacePlan(plan);
+    requestAnimationFrame(() => {
+      document.getElementById('planificador-semanal')?.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  async function handleGenerateDietAI({ apiKey, dietType, allergies, customPrompt, onProgress }) {
+    if (!results) return;
+    const plan = await generateDietWithGemini({
+      apiKey,
+      targetCalories: results.targetCalories,
+      macros: results.macros,
+      dietType,
+      allergies,
+      customPrompt,
+      onProgress,
+    });
     replacePlan(plan);
     requestAnimationFrame(() => {
       document.getElementById('planificador-semanal')?.scrollIntoView({ behavior: 'smooth' });
@@ -218,9 +236,12 @@ function App() {
             onUpdateMealBulk={updateMealBulk}
             onUpdateMealIngredients={updateMealIngredients}
             dailyTotals={dailyTotals}
-            target={results.targetCalories}
-            macros={results.macros}
-            onGenerateDiet={handleGenerateDiet}
+             target={results.targetCalories}
+             macros={results.macros}
+             onGenerateDietLocal={handleGenerateDietLocal}
+             onGenerateDietAI={handleGenerateDietAI}
+             config={config}
+             setConfig={setConfig}
           />
         </Suspense>
         </div>
